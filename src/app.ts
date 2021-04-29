@@ -65,9 +65,9 @@ app.get("/", (req, res) => {
     let cachedSchedule = scheduleManager.getCachedSchedule(req.cookies.name, password, week);
 
     if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.NoCache) {
-        schedule = schedule.replace("--SCHEDULE--", "Det fanns inget sparat schema, laddar in...");
+        schedule = schedule.replace("<!--! MESSAGE -->", "Det fanns inget sparat schema, laddar in...");
     } else if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.OldLogin) {
-        schedule = schedule.replace("--SCHEDULE--", "Fel inloggningsuppgifter till det sparade schemat. Detta kan hända efter ett lösenordsbyte, vänter på att ladda in med det nya lösenordet...");
+        schedule = schedule.replace("<!--! MESSAGE -->", "Fel inloggningsuppgifter till det sparade schemat. Detta kan hända efter ett lösenordsbyte, vänter på att ladda in med det nya lösenordet...");
     } else if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.Success && cachedSchedule.schedule) {
         schedule = schedule.replace("\"--SCHEDULE--\"", JSON.stringify(cachedSchedule.schedule)); //.replace(/"/g, '\\"').replace(/'/g, "\\'"));
         if (cachedSchedule.schedule) {
@@ -76,7 +76,7 @@ app.get("/", (req, res) => {
             }
         }
     } else {
-        schedule = schedule.replace("--SCHEDULE--", "Okänt fel vid hämtande av schema.");
+        schedule = schedule.replace("<!--! MESSAGE -->", "Okänt fel vid hämtande av schema.");
     }
 
     if (schedule.includes("--SCHEDULE--")) {
@@ -129,11 +129,17 @@ app.post("/schedules", async (req, res) => {
     }
 
     return res.json({ message: "Okänt fel vid hämtande av scheman." });
-
 });
 
-app.post("/food", (req, res) => {
-    res.send({ message: "Den här funktionen är inte överförd till den nya appen än." });
+app.post("/food", async (req, res) => {
+    let weeks: string[] = [];
+    let currentWeek = dateHelper.getWeek(new Date());
+    for (let w = currentWeek; w <= currentWeek + FUTURE_WEEKS; w++) {
+        weeks.push(w.toString());
+    }
+
+    let foodData = await foodManager.getFood(weeks);
+    res.json({ weeks: foodData });
 });
 
 

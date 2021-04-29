@@ -3,6 +3,7 @@
     --bg-color: #FFFFFF;
     --text-bg-color: #FFFFFF;
     --accent-color: #66BB6A;
+    --schedule-lines: #000000;
 }
 
 [data-theme="dark"] {
@@ -10,6 +11,7 @@
     --bg-color: #303136;
     --text-bg-color: #212225;
     --accent-color: #66BB6A;
+    --schedule-lines: #606060;
 }
 
 body {
@@ -51,6 +53,12 @@ button:focus {
     outline: none;
 }
 
+button:hover:enabled {
+    -webkit-transform: scale(1.08);
+    -ms-transform: scale(1.08);
+    transform: scale(1.08);
+}
+
 .week_buttons {
     display: inline;
 }
@@ -76,7 +84,11 @@ text {
 
 rect {
     fill: var(--text-bg-color);
-    stroke: var(--font-color);
+    stroke: var(--schedule-lines);
+}
+
+line {
+    stroke: var(--schedule-lines);
 }
 
 .under_title {
@@ -97,6 +109,7 @@ rect {
     padding: 20px 25px 20px 25px;
     border-radius: 12px;
     border-style: solid;
+    border-color: var(--text-bg-color);
     background-color: var(--text-bg-color);
     margin-left: 20%;
     margin-right: 20%;
@@ -113,21 +126,12 @@ rect {
     font-size: 16;
 }
 
-.settings_holder {
-    text-align: left;
-    margin-left: 10px;
-    margin-top: 10px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    font-size: 16;
-}
-
 .current_day {
-    background-color: #D7EFFF;
+    background-color: var(--bg-color);
     padding: 0px 5px 5px 5px;
     border-radius: 5px;
     border-style: solid;
+    border-width: 4px;
 }
 
 .theme-switch-wrapper {

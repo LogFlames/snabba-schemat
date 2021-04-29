@@ -114,12 +114,15 @@
             scheduleHolder.innerHTML = "Laddar in denna vecka...";
         } else {
             if (currentTheme === "light") {
-                scheduleHolder.innerHTML = scheduleWeeks[week].html;
+                scheduleHolder.innerHTML = scheduleWeeks[week].html
+                    .replace(/fill: +rgb\(204, +204, +204\)/g, "fill:#DDDDDD");
             } else {
                 scheduleHolder.innerHTML = scheduleWeeks[week].html
+                    .replace(/stroke="#000000"/g, "")
+                    .replace(/stroke: +rgb\(0, +0, +0\)/g, "")
                     .replace(/fill: +rgb\(0, +0, +0\)/g, "")
                     .replace(/fill: +rgb\(255, +255, +255\)/g, "")
-                    .replace(/stroke: +rgb\(0, +0, +0\)/g, "")
+                    .replace(/fill: +rgb\(204, +204, +204\)/g, "fill:#303136")
                     .replace(/fill: +rgb\(0, +128, +255\)/g, "fill:rgb(0,64,127)")
                     .replace(/fill: +rgb\(128, +255, +128\)/g, "fill:rgb(64,127,64)")
                     .replace(/fill: +rgb\(112, +235, +115\)/g, "fill:rgb(36,97,37)")
@@ -129,9 +132,7 @@
                     .replace(/fill: +rgb\(174, +94, +255\)/g, "fill:rgb(87,47,127)")
                     .replace(/fill: +rgb\(159, +255, +255\)/g, "fill:rgb(79,127,127)")
                     .replace(/fill: +rgb\(255, +164, +255\)/g, "fill:rgb(127,82,127)")
-                    .replace(/fill: +rgb\(255, +190, +125\)/g, "fill:rgb(127,80,62)")
-                    .replace(/stroke="#000000"/g, "stroke=#FFFFFF")
-                    .replace(/fill: +rgb\(204, +204, +204\)/g, "fill:#37393E");;
+                    .replace(/fill: +rgb\(255, +190, +125\)/g, "fill:rgb(127,80,62)");
             }
         }
     }
@@ -252,6 +253,10 @@
             }
             if (response.weeks) {
                 scheduleWeeks = response.weeks;
+                for (let week in scheduleWeeks) {
+                    scheduleWeeks[week].html = scheduleWeeks[week].html
+                        //.replace(/(?<=(Lesson|TimetableDay).*?)stroke-width: 1/g, "stroke-width: 0") // Way too heavy, takes a few seconds!!!
+                }
                 if (week in response.weeks) {
                     renderScheduleWeek();
                 }
@@ -289,12 +294,6 @@
                 document.getElementById("food_message_holder").innerText = response.message;
             } else {
                 document.getElementById("food_message_holder").innerText = "";
-            }
-
-            if (response.html) {
-                document.getElementById("food").innerHTML = response.html;
-
-
             }
         });
 </script>
