@@ -24,11 +24,13 @@ const scheduleTemplate = fs.readFileSync(path.join(__dirname, "..", "htmlsMin", 
 
 const app = express();
 
+app.use(express.static("public"));
+app.use("/bin", express.static("bin"));
+app.use('/.well-known', express.static('.well-known'));
+
 app.use(cookieParser(security.secret));
 app.use(express.json());
 
-app.use(express.static("public"));
-app.use("/bin", express.static("bin"));
 
 app.post("/activate", (req, res) => {
     if (!('activationCode' in req.body)) {
