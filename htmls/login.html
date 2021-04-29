@@ -1,0 +1,104 @@
+<head>
+    <title>Snabba Schemat</title>
+    <link rel="stylesheet" type="text/css" href="style.min.css">
+    <script>
+        const currentTheme = localStorage.getItem("theme") ? localStorage.getItem("theme") : "light";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+    </script>
+</head>
+
+<body>
+
+    <h1 class="center">Logga in</h1>
+    <div class="center">
+        <p class="center_width" style="width: 60%">Din elevinloggning behövs för att hämta ditt schema. Lösenordet sparas krypterat på din enhet i kakorna. Men för att kunna hämta schemat måste servern avkryptera lösenordet och det finns ingen garanti för att lösenordet inte sparas, om servern
+            blir hackad kan någon få reda på ditt lösenord. Använd på egen risk.</p>
+    </div>
+    <div class="center">
+        <label>Användarnamn</label><br>
+        <div class="space10"></div>
+        <input id="name" type="text" autocomplete="on" autofocus placeholder="(t.ex. aa01234)" size="32" /><br>
+        <div class="space40"></div>
+        <label>Lösenord</label><br>
+        <div class="space10"></div>
+        <input id="password" type="password" placeholder="Skriv in lösenord" size="32" /><br>
+        <div class="space30"></div>
+        <button id="login_button" disabled>Logga in</button>
+        <div class="space30"></div>
+        <p id="error_messages"></p>
+    </div>
+
+    <div class="promotion">Gjord av: Elias Lundell</div>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+      </label>
+        <em>Enable Dark Mode</em>
+    </div>
+
+</body>
+
+<script src="../bin/jsencrypt.min.js"></script>
+<script>
+    const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
+
+    if (currentTheme === "dark") {
+        toggleSwitch.checked = true;
+    }
+
+
+    function switchTheme(e) {
+        if (e.target.checked) {
+            document.documentElement.setAttribute("data-theme", "dark");
+            localStorage.setItem("theme", "dark")
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+            localStorage.setItem("theme", "light")
+        }
+    }
+
+    toggleSwitch.addEventListener("change", switchTheme, false);
+
+
+
+    var detailsChanged = () => {
+        if (document.getElementById("name").value === "" || document.getElementById("password").value === "") {
+            document.getElementById("login_button").setAttribute("disabled", null);
+        } else {
+            document.getElementById("login_button").removeAttribute("disabled");
+        }
+    };
+
+    var submitOnEnter = code => {
+        if (code.key === "Enter") {
+            submitLoginDelaits();
+        }
+    }
+
+    var submitLoginDelaits = () => {
+        if (document.getElementById("name").value === "" || document.getElementById("password").value === "") {
+            return;
+        }
+
+        var encrypt = new JSEncrypt();
+        encrypt.setPublicKey("-----PUBLIC KEY-----");
+        var encryptedPassword = encrypt.encrypt(document.getElementById("password").value);
+
+        let exp_date = new Date();
+        exp_date.setTime(exp_date.getTime() + 4 * 365 * 24 * 3600 * 1000);
+
+        document.cookie = `name=${document.getElementById("name").value}; expires=${exp_date.toUTCString()}`;
+        document.cookie = `password=${encryptedPassword}; expires=${exp_date.toUTCString()}`;
+
+        window.location.reload(true);
+    };
+
+    document.getElementById("name").oninput = detailsChanged;
+    document.getElementById("password").oninput = detailsChanged;
+
+    document.getElementById("name").onkeypress = submitOnEnter;
+    document.getElementById("password").onkeypress = submitOnEnter;
+
+    document.getElementById("login_button").onclick = submitLoginDelaits;
+</script>

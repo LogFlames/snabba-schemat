@@ -1,0 +1,144 @@
+<head>
+    <title>Snabba Schemat</title>
+    <link rel="stylesheet" type="text/css" href="style.min.css">
+    <script>
+        const currentTheme = localStorage.getItem("theme") ? localStorage.getItem("theme") : "light";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+    </script>
+</head>
+
+<body class="center">
+
+    <h1>Aktivera nyckel</h1>
+    <div class="space40"></div>
+    <p id="parsing_errors"></p>
+    <input id="activation_code" type="text" autocomplete="off" autofocus placeholder="XXXX-XXXX-XXXX-XXXX" style="font-family: monospace;" size="19" class="center" /><br>
+    <div class="space40"></div>
+    <button id="activate_button" disabled>Aktivera</button>
+    <p id="error_messages"></p>
+
+    <div class="promotion">Gjord av: Elias Lundell</div>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+      </label>
+        <em>Enable Dark Mode</em>
+    </div>
+
+</body>
+
+<script>
+    const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
+
+    if (currentTheme === "dark") {
+        toggleSwitch.checked = true;
+    }
+
+    function switchTheme(e) {
+        if (e.target.checked) {
+            document.documentElement.setAttribute("data-theme", "dark");
+            localStorage.setItem("theme", "dark")
+        } else {
+            document.documentElement.setAttribute("data-theme", "light");
+            localStorage.setItem("theme", "light")
+        }
+    }
+
+    toggleSwitch.addEventListener("change", switchTheme, false);
+
+
+
+    const allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    var lastActivationRode = "";
+
+    var submitActivationCode = async() => {
+        let activationCode = document.getElementById('activation_code').value;
+
+        let validity = activationCode.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/g);
+
+        if (!validity || validity.length !== 1) {
+            return;
+        }
+
+        const options = {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                activationCode: activationCode
+            })
+        }
+
+        fetch('/activate', options)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else if (response.status === 429) {
+                    return {
+                        success: false,
+                        message: "För många försök, försök igen senare."
+                    };
+                } else {
+                    return {
+                        success: false,
+                        message: `Kunde inte aktivera koden: ${response.statusText}`
+                    };
+                }
+            })
+            .then(response => {
+                if (response.success) {
+                    window.location.reload(true);
+                } else {
+                    document.getElementById("error_messages").innerText = response.message;
+                }
+            });
+    }
+
+    document.getElementById("activation_code").oninput = () => {
+
+        let inputBox = document.getElementById("activation_code");
+
+        let value = inputBox.value.replaceAll("-", "");
+        let newValue = "";
+
+        for (let i = 0; i < value.length; i++) {
+            let newChar = value.charAt(i).toUpperCase();
+
+            if (allowed_chars.indexOf(newChar) >= 0) {
+                newValue += newChar;
+            }
+
+            if (newValue.length % 5 === 4) {
+                newValue += "-";
+            }
+        }
+
+        if (inputBox.value.length < lastActivationRode.length) {
+            if (newValue.charAt(newValue.length - 1) === "-") {
+                newValue = newValue.slice(0, newValue.length - 1);
+            }
+        }
+
+        newValue = newValue.slice(0, 19);
+
+        if (newValue.length == 19) {
+            document.getElementById("activate_button").removeAttribute("disabled");
+        } else {
+            document.getElementById("activate_button").setAttribute("disabled", null);
+        }
+
+        lastActivationRode = newValue;
+
+        inputBox.value = newValue;
+    };
+
+    document.getElementById("activate_button").onclick = submitActivationCode;
+    document.getElementById("activation_code").onkeypress = (code) => {
+        if (code.key === "Enter") {
+            submitActivationCode();
+        }
+    }
+</script>

@@ -1,0 +1,52 @@
+mkdir built
+mkdir cache
+cd cache
+mkdir users
+cd ..
+mkdir cert
+mkdir htmlsMin
+mkdir private
+cd private
+
+if [ ! -e activationCodes.json ]; then
+cat > activationCodes.json << EOF
+{
+	"AAAA-AAAA-AAAA-AAAA": {
+		"used": false,
+		"usedOn": null
+	}
+}
+EOF
+fi
+
+if [ ! -e activeUUIDs.json ]; then
+cat > activeUUIDs.json << EOF
+{}
+EOF
+fi
+
+if [ ! -e secret.json ]; then
+cat > secret.json << EOF
+{
+    "key": "123ABC"
+}
+EOF
+fi
+
+if [ ! -e rsa_1024_priv.pem ]; then
+openssl genrsa -out rsa_1024_priv.pem 1024;
+openssl rsa -pubout -in rsa_1024_priv.pem -out rsa_1024_pub.pem;
+fi
+
+cd ..
+
+echo "Generate certification files from https://www.sslforfree.com/ or use the commands below"
+
+# cd cert
+# if [ ! -e key.pem ] || [ ! -e cert.pem ]; then
+# openssl genrsa -out key.pem
+# openssl req -new -key key.pem -out csr.pem
+# openssl x509 -req -days 365 -in csr.pem -signkey key.pem -out cert.pem
+# rm csr.pem
+# fi
+# cd ..
