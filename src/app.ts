@@ -52,15 +52,6 @@ app.post("/activate", (req, res) => {
 
 
 app.use(security.authenticate);
-
-app.post("/food", (req, res) => {
-    if (!("week" in req.cookies)) {
-        res.sendStatus(400);
-    }
-
-    res.send({ message: "Den här funktionen är inte överförd till den nya appen än." });
-});
-
 app.use(security.login);
 
 app.get("/", (req, res) => {
@@ -139,6 +130,10 @@ app.post("/schedules", async (req, res) => {
 
     return res.json({ message: "Okänt fel vid hämtande av scheman." });
 
+});
+
+app.post("/food", (req, res) => {
+    res.send({ message: "Den här funktionen är inte överförd till den nya appen än." });
 });
 
 

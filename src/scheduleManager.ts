@@ -67,8 +67,6 @@ for (let user of fs.readdirSync(path.join(__dirname, "..", "cache", "users"))) {
     schedules[user.replace(".json", "")] = userSchedule;
 }
 
-console.log(schedules);
-
 export function getCachedSchedule(name: string, password: string, week: string): CachedScheduleReturn {
     if (!(name in schedules)) {
         return { status: CachedScheduleStatus.NoCache };
