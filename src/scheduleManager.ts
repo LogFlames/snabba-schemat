@@ -60,6 +60,7 @@ export interface ScrapeScheduleReturn {
 }
 
 const schedules: { [name: string]: UserSchedule } = {};
+const scrapePromises: { [name: string]: Promise<ScrapeScheduleReturn> } = {};
 
 for (let user of fs.readdirSync(path.join(__dirname, "..", "cache", "users"))) {
     let userScheduleFile: UserScheduleFile = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "cache", "users", user)).toString());
@@ -115,7 +116,9 @@ export async function getSchedules(name: string, password: string, weeks: string
         }
     }
 
-    let scrapedWeeksPromise = scrapeWeeksAttempts(name, password, weeksToScrape);
+    if (!(name in scrapePromises)) {
+        scrapePromises[name] = scrapeWeeksAttempts(name, password, weeksToScrape);
+    }
 
 
     let missingWeeks: string[] = weeks;
@@ -136,7 +139,8 @@ export async function getSchedules(name: string, password: string, weeks: string
         }
     }
 
-    let scrapedWeeks = await scrapedWeeksPromise;
+    let scrapedWeeks = await scrapePromises[name];
+    delete scrapePromises[name];
 
     if (scrapedWeeks.status === UpdatedScheduleStatus.ServiceWindow) {
         returnStatus = UpdatedScheduleStatus.ServiceWindow;
