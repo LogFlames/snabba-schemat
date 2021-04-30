@@ -43,23 +43,18 @@ export async function getFood(weeks: string[]): Promise<{ [week: string]: FoodWe
 }
 
 async function scrapeFood(weeks: string[]) {
-    const browser = await puppeteer.launch({ devtools: true, headless: false });
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto('https://sodexo.mashie.com/public/app/St%20Eriks%20gymnasium/6639b607?country=se');
 
     await page.waitForSelector('#app-page > div.panel-group');
 
-    console.log(1);
-
     let foodWeekHTMLs: { [week: string]: string } = await page.evaluate((weeks: string[]): { [week: string]: string } => {
-        console.log(300);
         let weekHolder = document.querySelector("#app-page > div.panel-group");
 
         if (!weekHolder) {
             return {};
         }
-
-        console.log(2);
 
         let weeksHTML: { [week: string]: string } = {};
         let thisWeek: string = "";
@@ -70,8 +65,6 @@ async function scrapeFood(weeks: string[]) {
             if (weekHolder.children[i].nodeName === "H4" && Object.keys(weeksHTML).length === weeks.length) {
                 break;
             }
-
-            console.log(3);
 
             if (weekHolder.children[i].nodeName === "H4") {
                 if (thisWeek) {
@@ -85,7 +78,6 @@ async function scrapeFood(weeks: string[]) {
                     let week = mat[0];
                     if (weeks.includes(week)) {
                         thisWeek = week;
-                        console.log(4);
                     }
                 }
             } else if (weekHolder.children[i].nodeName === "DIV") {
@@ -96,15 +88,12 @@ async function scrapeFood(weeks: string[]) {
                     dateDay.innerText = (weekHolder.children[i].children[0] as HTMLElement).innerText;
                     holder.appendChild(dateDay);
 
-                    console.log(5);
-
                     let numberMatch = dateDay.innerText.match(/[\d]+/g);
                     if (!numberMatch) {
                         thisWeek = "";
                     } else {
                         holder.id = `day_${('0' + numberMatch[0]).slice(-2)}`;
 
-                        console.log(6);
                         for (let j = 0; j < weekHolder.children[i].children[1].childElementCount; j++) {
                             let category = document.createElement("strong");
                             category.innerText = (weekHolder.children[i].children[1].children[j].children[1] as HTMLElement).innerText;
@@ -131,8 +120,6 @@ async function scrapeFood(weeks: string[]) {
 
         return weeksHTML;
     }, weeks);
-
-    console.log(700);
 
     await browser.close();
 
