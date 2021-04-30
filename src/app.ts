@@ -4,6 +4,7 @@ import https from 'https';
 
 import express, { urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
 import address from 'address';
 
 import * as security from './security';
@@ -23,6 +24,7 @@ const FUTURE_WEEKS = 3;
 const scheduleTemplate = fs.readFileSync(path.join(__dirname, "..", "htmlsMin", "schedule.min.html").toString());
 
 const app = express();
+app.use(compression());
 
 app.use(express.static("public"));
 app.use("/bin", express.static("bin"));
