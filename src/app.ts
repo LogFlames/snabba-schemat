@@ -57,6 +57,7 @@ app.use(security.authenticate);
 app.use(security.login);
 
 app.get("/", (req, res) => {
+    res.clearCookie("color-mode");
     let week: string = dateHelper.getWeek(new Date()).toString();
     if ("week" in req.cookies) {
         week = req.cookies.week;
@@ -162,7 +163,7 @@ if (useHTTPS) {
     }, app);
 
     sslServer.listen(HTTPS_PORT, HOST, () => {
-        console.log("HTTPS server is running on https://%s:%s", HTTPS_PORT, HOST);
+        console.log("HTTPS server is running on https://%s:%s", HOST, HTTPS_PORT);
     });
 } else {
     app.listen(HTTP_PORT, HOST, () => {
