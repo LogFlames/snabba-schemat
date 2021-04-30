@@ -3,6 +3,8 @@
     --bg-color: #FFFFFF;
     --text-bg-color: #FFFFFF;
     --accent-color: #66BB6A;
+    --current-food: #FFFFFF;
+    --current-food-outline: #000000;
     --schedule-lines: #000000;
 }
 
@@ -11,7 +13,19 @@
     --bg-color: #303136;
     --text-bg-color: #212225;
     --accent-color: #66BB6A;
+    --current-food: #303136;
+    --current-food-outline: #606060;
     --schedule-lines: #606060;
+}
+
+[data-theme="blue"] {
+    --font-color: #000000;
+    --bg-color: #A4CBFA;
+    --text-bg-color: #FFFFFF;
+    --accent-color: #86bdff;
+    --current-food: #c7e0ff;
+    --current-food-outline: #FFFFFF;
+    --schedule-lines: #000000;
 }
 
 body {
@@ -53,7 +67,7 @@ button:focus {
     outline: none;
 }
 
-button:hover:enabled {
+button:hover:enabled.scale {
     -webkit-transform: scale(1.08);
     -ms-transform: scale(1.08);
     transform: scale(1.08);
@@ -127,11 +141,12 @@ line {
 }
 
 .current_day {
-    background-color: var(--bg-color);
+    background-color: var(--current-food);
     padding: 0px 5px 5px 5px;
     border-radius: 5px;
     border-style: solid;
     border-width: 4px;
+    border-color: var(--current-food-outline);
 }
 
 .theme-switch-wrapper {

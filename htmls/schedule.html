@@ -45,6 +45,20 @@
 <script>
     const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
 
+    function firstClickDetetor() {
+        toggleSwitch.addEventListener("click", doubleClick);
+        setTimeout(function() {
+            toggleSwitch.removeEventListener("click", doubleClick);
+        }, 300);
+    }
+
+    function doubleClick() {
+        toggleSwitch.checked = false;
+        currentTheme = "blue";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        renderScheduleWeek();
+    }
+
     if (currentTheme === "dark") {
         toggleSwitch.checked = true;
     }
@@ -53,7 +67,7 @@
         if (e.target.checked) {
             currentTheme = "dark";
         } else {
-            currentTheme = "light";
+            currentTheme = currentTheme === "blue" ? "blue" : "light";
         }
         document.documentElement.setAttribute("data-theme", currentTheme);
         localStorage.setItem("theme", currentTheme)
@@ -61,6 +75,7 @@
     }
 
     toggleSwitch.addEventListener("change", switchTheme, false);
+    toggleSwitch.addEventListener("click", firstClickDetetor);
 
     function updateWeekCookie() {
         let exp_date = new Date();
@@ -113,7 +128,7 @@
         if (scheduleWeeks[week] === "") {
             scheduleHolder.innerHTML = "Laddar in denna vecka...";
         } else {
-            if (currentTheme === "light") {
+            if (currentTheme === "light" || currentTheme === "blue") {
                 scheduleHolder.innerHTML = scheduleWeeks[week].html
                     .replace(/fill: +rgb\(204, +204, +204\)/g, "fill:#DDDDDD");
             } else {

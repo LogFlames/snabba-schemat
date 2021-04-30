@@ -2,7 +2,7 @@
     <title>Snabba Schemat</title>
     <link rel="stylesheet" type="text/css" href="style.min.css">
     <script>
-        const currentTheme = localStorage.getItem("theme") ? localStorage.getItem("theme") : "light";
+        var currentTheme = localStorage.getItem("theme") ? localStorage.getItem("theme") : "light";
         document.documentElement.setAttribute("data-theme", currentTheme);
     </script>
 </head>
@@ -14,7 +14,7 @@
     <p id="parsing_errors"></p>
     <input id="activation_code" type="text" autocomplete="off" autofocus placeholder="XXXX-XXXX-XXXX-XXXX" style="font-family: monospace;" size="19" class="center" /><br>
     <div class="space40"></div>
-    <button id="activate_button" disabled>Aktivera</button>
+    <button id="activate_button" class="scale" disabled>Aktivera</button>
     <p id="error_messages"></p>
 
     <div class="promotion">Gjord av: Elias Lundell</div>
@@ -35,18 +35,31 @@
         toggleSwitch.checked = true;
     }
 
+    function firstClickDetetor() {
+        toggleSwitch.addEventListener("click", doubleClick);
+        setTimeout(function() {
+            toggleSwitch.removeEventListener("click", doubleClick);
+        }, 300);
+    }
+
+    function doubleClick() {
+        toggleSwitch.checked = false;
+        currentTheme = "blue";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+    }
+
     function switchTheme(e) {
         if (e.target.checked) {
-            document.documentElement.setAttribute("data-theme", "dark");
-            localStorage.setItem("theme", "dark")
+            currentTheme = "dark";
         } else {
-            document.documentElement.setAttribute("data-theme", "light");
-            localStorage.setItem("theme", "light")
+            currentTheme = currentTheme === "blue" ? "blue" : "light";
         }
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        localStorage.setItem("theme", currentTheme)
     }
 
     toggleSwitch.addEventListener("change", switchTheme, false);
-
+    toggleSwitch.addEventListener("click", firstClickDetetor);
 
 
     const allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
