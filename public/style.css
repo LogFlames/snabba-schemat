@@ -228,6 +228,6 @@ html,
 html *,
 html *:before,
 html *:after {
-    transition: all 400ms !important;
+    transition: all 250ms !important;
     transition-delay: 0 !important;
 }
