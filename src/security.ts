@@ -10,6 +10,7 @@ interface ActivationInformation {
     activationKey: string;
     lastAuthentication: string;
     authenticationCount: number;
+    clearedLogin: boolean;
 }
 
 interface ActivationCode {
@@ -65,8 +66,14 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 }
 
 export function login(req: Request, res: Response, next: NextFunction) {
-    if ("name" in req.cookies && "password" in req.cookies) {
-        return next();
+    if (activeUUIDs[req.signedCookies.uuid].clearedLogin) {
+        if ("name" in req.cookies && "password" in req.cookies) {
+            return next();
+        }
+    } else {
+        activeUUIDs[req.signedCookies.uud].clearedLogin = true;
+        res.clearCookie("name");
+        res.clearCookie("password");
     }
 
     res.type("html").send(loginTemplate);
@@ -87,7 +94,8 @@ export function activateCode(code: string): ActivateCodeReturn {
             activationTime: now,
             activationKey: code,
             lastAuthentication: now,
-            authenticationCount: 0
+            authenticationCount: 0,
+            clearedLogin: true
         }
 
         fs.writeFileSync(activationCodesPath, JSON.stringify(activationCodes, null, 2));
