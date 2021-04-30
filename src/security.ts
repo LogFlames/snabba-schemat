@@ -71,7 +71,7 @@ export function login(req: Request, res: Response, next: NextFunction) {
             return next();
         }
     } else {
-        activeUUIDs[req.signedCookies.uud].clearedLogin = true;
+        activeUUIDs[req.signedCookies.uuid].clearedLogin = true;
         res.clearCookie("name");
         res.clearCookie("password");
     }
