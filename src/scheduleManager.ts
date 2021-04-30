@@ -290,14 +290,16 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
 
             await delay(1);
 
+            await page.evaluate((weekText: string) => {
+                let inp = document.querySelector("input");
+                if (inp) {
+                    inp.value = "";
+                }
+            });
             await page.focus("input");
-            await page.keyboard.down('Control');
-            await page.keyboard.press('A');
-            await page.keyboard.up('Control');
-            await page.keyboard.press('Backspace');
-            await page.type("input", `v.${week}, ${year}`)
+            await page.type("input", `v.${week}, ${year}`);
             await page.focus("input");
-            await page.keyboard.press('Enter');
+            await page.keyboard.press("Enter");
 
             //await page.waitForResponse("https://fns.stockholm.se/ng/api/get/timetable/render/key");
             //await page.waitForResponse("https://fns.stockholm.se/ng/api/render/timetable");
