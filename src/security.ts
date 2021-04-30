@@ -29,8 +29,8 @@ export interface ActivateCodeReturn {
 
 export const secret: string = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "private", "secret.json")).toString()).secret;
 
-const PRIVATE_KEY = fs.readFileSync(path.join(__dirname, '..', 'private', 'rsa_1024_priv.pem')).toString().replace(/\r?\n|\r/g, "");
-export const PUBLIC_KEY = fs.readFileSync(path.join(__dirname, '..', 'private', 'rsa_1024_pub.pem')).toString().replace(/\r?\n|\r/g, "");
+const PRIVATE_KEY = fs.readFileSync(path.join(__dirname, '..', 'private', 'rsa_2048_priv.pem')).toString().replace(/\r?\n|\r/g, "");
+export const PUBLIC_KEY = fs.readFileSync(path.join(__dirname, '..', 'private', 'rsa_2048_pub.pem')).toString().replace(/\r?\n|\r/g, "");
 
 const activeUUIDsPath = path.join(__dirname, "..", "private", "activeUUIDs.json");
 const activationCodesPath = path.join(__dirname, "..", "private", "activationCodes.json");

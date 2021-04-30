@@ -1,4 +1,5 @@
 mkdir built
+mkdir .well-known
 mkdir cache
 cd cache
 mkdir users
