@@ -1,4 +1,5 @@
 mkdir built
+mkdir .well-known
 mkdir cache
 cd cache
 mkdir users
@@ -33,9 +34,9 @@ cat > secret.json << EOF
 EOF
 fi
 
-if [ ! -e rsa_1024_priv.pem ]; then
-openssl genrsa -out rsa_1024_priv.pem 1024;
-openssl rsa -pubout -in rsa_1024_priv.pem -out rsa_1024_pub.pem;
+if [ ! -e rsa_2048_priv.pem ]; then
+openssl genrsa -out rsa_2048_priv.pem 2048;
+openssl rsa -pubout -in rsa_2048_priv.pem -out rsa_2048_pub.pem;
 fi
 
 cd ..
