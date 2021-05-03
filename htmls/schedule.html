@@ -15,7 +15,7 @@
             <label>Vecka</label>
             <div id="week_buttons" class="week_buttons"></div>
         </h1>
-        <p class="under_title">(Du kan använda piltangenterna för att byta vecka)</p>
+        <p class="under_title" id="arrow_tip"></p>
     </div>
 
 
@@ -44,6 +44,10 @@
 </body>
 
 <script>
+    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isMobile) {
+        document.getElementById("arrow_tip").innerText = "(Du kan använda piltangenterna för att byta vecka)";
+    }
     const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
 
     function firstClickDetetor() {
