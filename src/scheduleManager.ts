@@ -73,6 +73,10 @@ export function getCachedSchedule(name: string, password: string, week: string):
         return { status: CachedScheduleStatus.NoCache };
     }
 
+    if (!password || !schedules[name].salt) {
+        return { status: CachedScheduleStatus.OldLogin };
+    }
+
     if (sha512salt(password, schedules[name].salt) !== schedules[name].password) {
         return { status: CachedScheduleStatus.OldLogin };
     }
@@ -97,7 +101,7 @@ export async function getSchedules(name: string, password: string, weeks: string
 
     if (!(name in schedules)) {
         weeksToScrape = weeks;
-    } else if (sha512salt(password, schedules[name].salt) !== schedules[name].password) {
+    } else if (!password || !schedules[name].salt || sha512salt(password, schedules[name].salt) !== schedules[name].password) {
         weeksToScrape = weeks;
     } else {
         for (let w of weeks) {
