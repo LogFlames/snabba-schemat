@@ -68,13 +68,17 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 export function login(req: Request, res: Response, next: NextFunction) {
     if (activeUUIDs[req.signedCookies.uuid].clearedLogin) {
         if ("name" in req.cookies && "password" in req.cookies) {
-            return next();
+            let passwordDecoded = decryptRSA(req.cookies.password);
+            if (passwordDecoded) {
+                return next();
+            }
         }
     } else {
         activeUUIDs[req.signedCookies.uuid].clearedLogin = true;
-        res.clearCookie("name");
-        res.clearCookie("password");
     }
+
+    res.clearCookie("name");
+    res.clearCookie("password");
 
     res.type("html").send(loginTemplate);
 }
