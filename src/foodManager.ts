@@ -60,7 +60,7 @@ async function scrapeFood(weeks: string[]) {
         let thisWeek: string = "";
 
         let i = 0;
-        let extracted = document.createElement("div");
+        let extracted = document.createElement("tr");
         while (weekHolder.childElementCount > i) {
             if (weekHolder.children[i].nodeName === "H4" && Object.keys(weeksHTML).length === weeks.length) {
                 break;
@@ -68,8 +68,8 @@ async function scrapeFood(weeks: string[]) {
 
             if (weekHolder.children[i].nodeName === "H4") {
                 if (thisWeek) {
-                    weeksHTML[thisWeek] = extracted.outerHTML;
-                    extracted = document.createElement("div");
+                    weeksHTML[thisWeek] = "<table>" + extracted.outerHTML + "</table>";
+                    extracted = document.createElement("tr");
                     thisWeek = "";
                 }
 
@@ -82,7 +82,7 @@ async function scrapeFood(weeks: string[]) {
                 }
             } else if (weekHolder.children[i].nodeName === "DIV") {
                 if (thisWeek) {
-                    let holder = document.createElement("div");
+                    let holder = document.createElement("td");
 
                     let dateDay = document.createElement("h3");
                     dateDay.innerText = (weekHolder.children[i].children[0] as HTMLElement).innerText;
@@ -115,7 +115,7 @@ async function scrapeFood(weeks: string[]) {
         }
 
         if (thisWeek) {
-            weeksHTML[thisWeek] = extracted.outerHTML;
+            weeksHTML[thisWeek] = "<table>" + extracted.outerHTML + "</table>";
         }
 
         return weeksHTML;
