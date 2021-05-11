@@ -45,7 +45,9 @@
 
 <script>
     var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (!isMobile) {
+    if (isMobile) {
+        document.getElementById("arrow_tip").innerText = "(Du kan svajpa för att byta vecka)";
+    } else {
         document.getElementById("arrow_tip").innerText = "(Du kan använda piltangenterna för att byta vecka)";
     }
     const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
