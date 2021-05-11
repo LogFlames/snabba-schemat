@@ -131,15 +131,11 @@
                 direction = "right";
             }
             if (moved > swiper.minSwipePixels && direction !== "undefined") {
-                swiper.swipe(direction, moved);
+                swiper.swiperCallback({
+                    direction: direction,
+                    movedPixels: moved
+                });
             }
-        },
-
-        swipe: function(direction, movedPixels) {
-            var ret = {};
-            ret.direction = direction;
-            ret.movedPixels = movedPixels;
-            swiper.swiperCallback(ret);
         }
     }
 
