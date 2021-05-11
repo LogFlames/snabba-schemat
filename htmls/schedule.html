@@ -11,7 +11,7 @@
 <body>
 
     <div class="center">
-        <h1>Schema -
+        <h1 id="title_bar">Schema -
             <label>Vecka</label>
             <div id="week_buttons" class="week_buttons"></div>
         </h1>
@@ -46,7 +46,7 @@
 <script>
     var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {
-        document.getElementById("arrow_tip").innerText = "(Du kan svajpa för att byta vecka)";
+        //document.getElementById("arrow_tip").innerText = "(Du kan svajpa på veckorna för att byta vecka)";
     } else {
         document.getElementById("arrow_tip").innerText = "(Du kan använda piltangenterna för att byta vecka)";
     }
@@ -103,6 +103,7 @@
             3 + (week1.getDay() + 6) % 7) / 7);
     }
 
+    /*
     var swiper = {
         touchStartX: 0,
         touchEndX: 0,
@@ -141,8 +142,7 @@
         }
     }
 
-    //var gestureZone = document.getElementById('container');
-    var gestureZone = document;
+    var gestureZone = document.getElementById("title_bar");
     swiper.init(gestureZone, function(e) {
         switch (e.direction) {
             case "left":
@@ -153,6 +153,7 @@
                 break;
         }
     });
+    */
 
     const FUTURE_WEEKS = 3;
 
