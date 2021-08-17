@@ -10,7 +10,7 @@ interface ActivationInformation {
     activationKey: string;
     lastAuthentication: string;
     authenticationCount: number;
-    clearedLogin: boolean;
+    shallForceLogout: boolean;
 }
 
 interface ActivationCode {
@@ -66,21 +66,22 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 }
 
 export function login(req: Request, res: Response, next: NextFunction) {
-    if (activeUUIDs[req.signedCookies.uuid].clearedLogin) {
+    if (activeUUIDs[req.signedCookies.uuid].shallForceLogout) {
+        activeUUIDs[req.signedCookies.uuid].shallForceLogout = false;
+        fs.writeFileSync(activeUUIDsPath, JSON.stringify(activeUUIDs, null, 2));
+
+        res.clearCookie("name");
+        res.clearCookie("password");
+    
+        res.type("html").send(loginTemplate);
+    } else {
         if ("name" in req.cookies && "password" in req.cookies) {
             let passwordDecoded = decryptRSA(req.cookies.password);
             if (passwordDecoded) {
                 return next();
             }
         }
-    } else {
-        activeUUIDs[req.signedCookies.uuid].clearedLogin = true;
     }
-
-    res.clearCookie("name");
-    res.clearCookie("password");
-
-    res.type("html").send(loginTemplate);
 }
 
 export function activateCode(code: string): ActivateCodeReturn {
@@ -99,7 +100,7 @@ export function activateCode(code: string): ActivateCodeReturn {
             activationKey: code,
             lastAuthentication: now,
             authenticationCount: 0,
-            clearedLogin: true
+            shallForceLogout: false
         }
 
         fs.writeFileSync(activationCodesPath, JSON.stringify(activationCodes, null, 2));
