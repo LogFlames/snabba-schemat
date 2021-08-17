@@ -229,6 +229,15 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
     let browser = await puppeteer.launch();
     let page = await browser.newPage();
 
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+        if (req.resourceType() == "image" || req.resourceType() == "stylesheet" || req.resourceType() == "font") {
+            req.abort();
+        } else {
+            req.continue();
+        }
+    });
+
     await page.goto("https://fnsservicesso1.stockholm.se/sso-ng/saml-2.0/authenticate?customer=https://login001.stockholm.se&targetsystem=TimetableViewer");
 
     await page.waitForSelector("a.btn:nth-child(1)");
