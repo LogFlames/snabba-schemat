@@ -142,7 +142,7 @@ td {
     display: block;
 }
 
-@media screen and (max-aspect-ratio: 1/1) {
+@media screen and (max-aspect-ratio: 4/3) {
     .holder {
         margin-left: 2%;
         margin-right: 2%;
