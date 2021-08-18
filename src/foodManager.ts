@@ -141,6 +141,7 @@ async function scrapeFood(weeks: string[]) {
             foodWeekHTMLs[week] += row;
         }
         foodWeekHTMLs[week] += "</table>";
+        foodWeekHTMLs[week] = foodWeekHTMLs[week].replace(/Kökets gröna 1/g, "Kökets gröna");
     }
 
     let now = new Date().toUTCString();
