@@ -72,7 +72,7 @@ app.get("/", (req, res) => {
     let cachedSchedule = scheduleManager.getCachedSchedule(req.cookies.name, password, week);
 
     if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.NoCache) {
-        schedule = schedule.replace("<!--! MESSAGE -->", "Det fanns inget sparat schema, laddar in... (Det här kan ta lite tid)");
+        schedule = schedule.replace("<!--! MESSAGE -->", "Det fanns inget sparat schema, laddar in... (Detta kan ta en stund)");
     } else if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.OldLogin) {
         schedule = schedule.replace("<!--! MESSAGE -->", "Fel inloggningsuppgifter till det sparade schemat. Detta kan hända efter ett lösenordsbyte, vänter på att ladda in med det nya lösenordet...");
     } else if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.Success && cachedSchedule.schedule) {
