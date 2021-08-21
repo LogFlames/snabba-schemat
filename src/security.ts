@@ -69,11 +69,6 @@ export function login(req: Request, res: Response, next: NextFunction) {
     if (activeUUIDs[req.signedCookies.uuid].shallForceLogout) {
         activeUUIDs[req.signedCookies.uuid].shallForceLogout = false;
         fs.writeFileSync(activeUUIDsPath, JSON.stringify(activeUUIDs, null, 2));
-
-        res.clearCookie("name");
-        res.clearCookie("password");
-    
-        res.type("html").send(loginTemplate);
     } else {
         if ("name" in req.cookies && "password" in req.cookies) {
             let passwordDecoded = decryptRSA(req.cookies.password);
@@ -82,6 +77,11 @@ export function login(req: Request, res: Response, next: NextFunction) {
             }
         }
     }
+
+    res.clearCookie("name");
+    res.clearCookie("password");
+
+    return res.type("html").send(loginTemplate);
 }
 
 export function activateCode(code: string): ActivateCodeReturn {
