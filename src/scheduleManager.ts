@@ -346,12 +346,20 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
             if (!svg) {
                 return "Hittade inte schema-bilden";
             }
-
             svg.setAttribute("width", "100%");
             svg.removeAttribute("height");
             (<HTMLElement>scheduleParent.querySelector(".w-timetable")).style.width = "100%";
             (<HTMLElement>scheduleParent.querySelector(".w-timetable")).style.height = "auto";
-            return (<Element>scheduleParent).innerHTML;
+
+            let svgHTML = (<Element>scheduleParent).innerHTML;
+            svgHTML = svgHTML
+                .replace(/focusable="true"/g, "")
+                .replace(/box-type="[a-zA-Z]*"/g, "")
+                .replace(/tabindex="0"/g, "")
+                .replace(/cursor: pointer;/g, "")
+                .replace(/box-id="[0-9]*"/g, "");
+
+            return svgHTML;
         });
 
         if (!scrapeReturn.weeks) {
