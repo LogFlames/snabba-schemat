@@ -240,6 +240,8 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
 
     await page.goto("https://fnsservicesso1.stockholm.se/sso-ng/saml-2.0/authenticate?customer=https://login001.stockholm.se&targetsystem=TimetableViewer");
 
+    await page.setJavaScriptEnabled(false);
+
     await page.waitForSelector("a.btn:nth-child(1)");
     await page.click("a.btn:nth-child(1)");
 
@@ -251,6 +253,8 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
 
     await page.waitForSelector("#password");
     await page.type("#password", password);
+
+    await page.setJavaScriptEnabled(true);
 
     await page.waitForSelector("button.btn:nth-child(1)");
     await page.click("button.btn:nth-child(1)");
@@ -305,7 +309,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
                 return (svg ? svg.innerHTML : "");
             });
 
-            await delay(1);
+            await delay(0.5);
 
             await page.evaluate((weekText: string) => {
                 let inp = document.querySelector("input");
