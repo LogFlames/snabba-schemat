@@ -17,9 +17,21 @@ for (let htmlFile of htmlFiles) {
 }
 
 const cssFiles = ["style"];
+const cssVariables = {
+    "--font-color": "--fc",
+    "--bg-color": "--bc",
+    "--text-bg-color": "--tc",
+    "--accent-color": "--ac",
+    "--current-food": "--cf",
+    "--current-food-outline": "--co",
+    "--schedule-lines": "--sl"
+};
 
 for (let cssFile of cssFiles) {
     minify(path.join(__dirname, "..", "public", cssFile + ".css"), options).then(res => {
+        for (let varName in cssVariables) {
+            res = res.replaceAll(varName, cssVariables[varName]);
+        }
         fs.writeFileSync(path.join(__dirname, "..", "public", cssFile + ".min.css"), res);
     }).catch(err => {
         console.log(err);
