@@ -30,7 +30,7 @@ const cssVariables = {
 for (let cssFile of cssFiles) {
     minify(path.join(__dirname, "..", "public", cssFile + ".css"), options).then(res => {
         for (let varName in cssVariables) {
-            res = res.replaceAll(varName, cssVariables[varName]);
+            res = res.replace(new RegExp(varName, "g"), cssVariables[varName]);
         }
         fs.writeFileSync(path.join(__dirname, "..", "public", cssFile + ".min.css"), res);
     }).catch(err => {
