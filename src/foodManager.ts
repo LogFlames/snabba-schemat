@@ -55,7 +55,7 @@ async function scrapeFood(weeks: string[]) {
         }
     });
 
-    await page.goto('https://sodexo.mashie.com/public/app/St%20Eriks%20gymnasium/6639b607?country=se');
+    await page.goto('https://sodexo.mashie.com/public/app/S%C3%B6derk%C3%B6ket/08ec27e3?country=se');
 
     await page.waitForSelector('#app-page > div.panel-group');
 
