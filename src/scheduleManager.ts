@@ -361,7 +361,12 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
                 .replace(/box-type="[a-zA-Z]*"/g, "")
                 .replace(/tabindex="0"/g, "")
                 .replace(/cursor: pointer;/g, "")
-                .replace(/box-id="[0-9]*"/g, "");
+                .replace(/box-id="[0-9]*"/g, "")
+                .replace(/shape-rendering="crispEdges"/g, "")
+                .replace(/\s\s+/g, " ")
+                .replace(/, /g, ",")
+                .replace(/: /g, ":")
+                .replace(/; /g, ";");
 
             return svgHTML;
         });
