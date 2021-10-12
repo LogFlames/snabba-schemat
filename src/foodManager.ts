@@ -43,7 +43,7 @@ export async function getFood(weeks: string[]): Promise<{ [week: string]: FoodWe
 }
 
 async function scrapeFood(weeks: string[]) {
-    const browser = await puppeteer.launch({headless: true});
+    const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
     await page.setRequestInterception(true);
@@ -99,15 +99,24 @@ async function scrapeFood(weeks: string[]) {
                         thisWeek = "";
                     } else {
                         for (let j = 0; j < weekHolder.children[i].children[1].childElementCount; j++) {
-                            let category = document.createElement("strong");
-                            category.innerText = (weekHolder.children[i].children[1].children[j].children[1] as HTMLElement).innerText;
-                            holderList.push(category.outerHTML);
+                            for (let k = 0; k < weekHolder.children[i].children[1].children[j].childElementCount; k++) {
+                                let nodeName: string = weekHolder.children[i].children[1].children[j].children[k].nodeName;
+                                if (nodeName === "STRONG") {
+                                    let category = document.createElement("strong");
+                                    category.innerText = (weekHolder.children[i].children[1].children[j].children[k] as HTMLElement).innerText;
+                                    holderList.push(category.outerHTML);
+                                } else if (nodeName === "DIV") {
+                                    let food = document.createElement("p");
+                                    food.innerText = (weekHolder.children[i].children[1].children[j].children[k] as HTMLElement).innerText;
+                                    food.style.marginTop = "4px";
+                                    food.style.marginBottom = "12px";
 
-                            let food = document.createElement("p");
-                            food.innerText = (weekHolder.children[i].children[1].children[j].children[2] as HTMLElement).innerText;
-                            food.style.marginTop = "4px";
-                            food.style.marginBottom = "12px";
-                            holderList.push(food.outerHTML);
+                                    if (food.innerText === "") {
+                                        continue;
+                                    }
+                                    holderList.push(food.outerHTML);
+                                }
+                            }
                         }
 
                         weeksText[thisWeek].push(holderList);
@@ -123,7 +132,7 @@ async function scrapeFood(weeks: string[]) {
 
     await browser.close();
 
-    let foodWeekHTMLs: {[week: string]: string} = {};
+    let foodWeekHTMLs: { [week: string]: string } = {};
 
     for (let week in foodWeekTexts) {
         foodWeekHTMLs[week] = "<table>";

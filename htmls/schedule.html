@@ -232,7 +232,7 @@
 
         let foodHolder = document.getElementById("food_holder");
 
-        if (foodWeeks[week] === "") {
+        if (!(week in foodWeeks) || foodWeeks[week] === "") {
             foodHolder.innerHTML = "Laddar matsedeln...";
         } else {
             foodHolder.innerHTML = foodWeeks[week].html;
