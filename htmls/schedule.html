@@ -48,7 +48,8 @@
 </body>
 
 <script>
-    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.platform);
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.platform);
     if (isMobile) {
         //document.getElementById("arrow_tip").innerText = "(Du kan svajpa på veckorna för att byta vecka)";
     } else {
