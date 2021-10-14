@@ -11,11 +11,13 @@ interface ActivationInformation {
     lastAuthentication: string;
     authenticationCount: number;
     shallForceLogout: boolean;
+    isAdmin: boolean;
 }
 
 interface ActivationCode {
     used: boolean;
     usedOn: string;
+    isAdmin?: boolean;
 }
 
 export enum ActivateCodeStatus {
@@ -50,6 +52,10 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
             activeUUIDs[req.signedCookies.uuid].lastAuthentication = new Date().toUTCString();
             activeUUIDs[req.signedCookies.uuid].authenticationCount++;
             fs.writeFileSync(activeUUIDsPath, JSON.stringify(activeUUIDs, null, 2));
+            if (activeUUIDs[req.signedCookies.uuid].isAdmin === undefined) {
+                activeUUIDs[req.signedCookies.uuid].isAdmin = false;
+            }
+            req.isAdmin = activeUUIDs[req.signedCookies.uuid].isAdmin;
             return next();
         } else {
             res.clearCookie("uuid");
@@ -91,6 +97,8 @@ export function activateCode(code: string): ActivateCodeReturn {
         activationCodes[code].used = true;
         activationCodes[code].usedOn = now;
 
+        let admin: boolean = activationCodes[code].isAdmin || false;
+
         let uuid = "";
         if (uuid === "" || uuid in activeUUIDs) {
             uuid = generateRandomString(256);
@@ -100,7 +108,8 @@ export function activateCode(code: string): ActivateCodeReturn {
             activationKey: code,
             lastAuthentication: now,
             authenticationCount: 0,
-            shallForceLogout: false
+            shallForceLogout: false,
+            isAdmin: admin
         }
 
         fs.writeFileSync(activationCodesPath, JSON.stringify(activationCodes, null, 2));

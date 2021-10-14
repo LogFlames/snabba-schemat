@@ -93,6 +93,14 @@ app.get("/", (req, res) => {
     return res.type("html").send(schedule);
 });
 
+app.get("/admin", (req, res) => {
+    if (!req.isAdmin) {
+        return res.sendStatus(403);
+    }
+
+    return res.type("html").sendFile(path.join(__dirname, "..", "htmlsMin", "admin.min.html"));
+});
+
 app.post("/schedules", async (req, res) => {
     if (!("week" in req.cookies)) {
         return res.sendStatus(400);
