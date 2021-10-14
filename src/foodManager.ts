@@ -99,13 +99,18 @@ async function scrapeFood(weeks: string[]) {
                         thisWeek = "";
                     } else {
                         for (let j = 0; j < weekHolder.children[i].children[1].childElementCount; j++) {
+                            let prevWasStrong = false;
+
                             for (let k = 0; k < weekHolder.children[i].children[1].children[j].childElementCount; k++) {
                                 let nodeName: string = weekHolder.children[i].children[1].children[j].children[k].nodeName;
                                 if (nodeName === "STRONG") {
+                                    prevWasStrong = true;
                                     let category = document.createElement("strong");
                                     category.innerText = (weekHolder.children[i].children[1].children[j].children[k] as HTMLElement).innerText;
                                     holderList.push(category.outerHTML);
-                                } else if (nodeName === "DIV") {
+                                } else if (nodeName === "DIV" && prevWasStrong) {
+                                    prevWasStrong = false;
+                                    
                                     let food = document.createElement("p");
                                     food.innerText = (weekHolder.children[i].children[1].children[j].children[k] as HTMLElement).innerText;
                                     food.style.marginTop = "4px";
