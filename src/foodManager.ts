@@ -110,7 +110,7 @@ async function scrapeFood(weeks: string[]) {
                                     holderList.push(category.outerHTML);
                                 } else if (nodeName === "DIV" && prevWasStrong) {
                                     prevWasStrong = false;
-                                    
+
                                     let food = document.createElement("p");
                                     food.innerText = (weekHolder.children[i].children[1].children[j].children[k] as HTMLElement).innerText;
                                     food.style.marginTop = "4px";
@@ -168,4 +168,11 @@ async function scrapeFood(weeks: string[]) {
     }
 
     fs.writeFileSync(foodFilePath, JSON.stringify(foods));
+}
+
+export function clearCachedFoods() {
+    foods = {};
+    if (fs.existsSync(foodFilePath)) {
+        fs.rmSync(foodFilePath);
+    }
 }

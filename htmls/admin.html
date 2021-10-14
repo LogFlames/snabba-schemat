@@ -17,7 +17,7 @@
         <h1>Admin Configuration</h1>
         <div class="center holder">
             <h2>Food</h2>
-            <button>Clear cached food</button>
+            <button id="clear_cached_foods">Clear cached food</button>
         </div>
         <div class="space30"></div>
         <div class="center holder">
@@ -71,4 +71,33 @@
 
     toggleSwitch.addEventListener("change", switchTheme, false);
     toggleSwitch.addEventListener("click", firstClickDetetor);
+
+    function clearCachedFoods() {
+        const postClearCachedFoodsOptions = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        }
+
+        fetch("/clearCachedFoods", postClearCachedFoodsOptions)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return {
+                        success: false
+                    };
+                }
+            })
+            .then(response => {
+                if (response.success) {
+                    console.log("Deed done");
+                }
+            });
+    }
+
+    document.getElementById("clear_cached_foods").addEventListener("click", clearCachedFoods);
 </script>

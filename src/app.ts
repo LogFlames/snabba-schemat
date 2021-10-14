@@ -154,7 +154,16 @@ app.post("/food", async (req, res) => {
     }
 
     let foodData = await foodManager.getFood(weeks);
-    res.json({ weeks: foodData });
+    return res.json({ weeks: foodData });
+});
+
+app.post("/clearCachedFoods", (req, res) => {
+    if (!req.isAdmin) {
+        return res.sendStatus(403);
+    }
+
+    foodManager.clearCachedFoods();
+    return res.json({ success: true });
 });
 
 
