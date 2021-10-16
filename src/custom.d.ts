@@ -1,5 +1,5 @@
 declare namespace Express {
-    export interface Request {
-       isAdmin?: boolean;
-    }
- }
+   interface Request {
+      userPermission?: import("./security").UserPermission;
+   }
+}

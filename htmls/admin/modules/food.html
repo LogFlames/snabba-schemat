@@ -1,0 +1,72 @@
+<div class="center holder">
+    <h2>Food</h2>
+    <button id="clear_cached_foods">Clear cached food</button>
+    <br>
+    <input id="new_food_link" style="width: 70%;" placeholder="https://sodexo.mashie.com/public/app?country=se">
+    <button id="update_food_link">Update Food Link</button>
+</div>
+<div class="space30"></div>
+
+<script>
+    document.getElementById("clear_cached_foods").addEventListener("click", clearCachedFoods);
+    document.getElementById("update_food_link").addEventListener("click", updateFoodLink);
+
+    function clearCachedFoods() {
+        let postClearCachedFoodsOptions = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        }
+
+        fetch("/admin/clearCachedFoods", postClearCachedFoodsOptions)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return {
+                        status: "Unsuccessful request"
+                    };
+                }
+            })
+            .then(response => {
+                alert("Clear Cached Foods:\n" + response.status + ("message" in response ? "\n" + response.message : ""));
+            });
+    }
+
+    function updateFoodLink() {
+
+        let newFoodLink = document.getElementById("new_food_link").value;
+        if (newFoodLink === "") {
+            alert("You need to enter the new link first...");
+            return;
+        }
+
+        let postUpdateFoodLink = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                newFoodLink: newFoodLink
+            })
+        };
+
+        fetch("/admin/updateFoodLink", postUpdateFoodLink)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return {
+                        status: "Unsuccessful request"
+                    };
+                }
+            })
+            .then(response => {
+                alert("Update Food Link:\n" + response.status + ("message" in response ? "\n" + response.message : ""));
+            });
+    }
+</script>

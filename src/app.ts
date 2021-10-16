@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 
-import express, { urlencoded } from 'express';
+import express from 'express';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import expressRateLimit from 'express-rate-limit';
@@ -12,6 +12,7 @@ import * as security from './security';
 import * as scheduleManager from './scheduleManager';
 import * as foodManager from './foodManager';
 import * as dateHelper from './dateHelpers';
+import * as admin from './admin';
 
 
 const HOST = address.ip();
@@ -59,6 +60,7 @@ app.post("/activate", (req, res) => {
 
 app.use(security.authenticate);
 app.use(security.login);
+app.use("/admin", admin.adminRouter(foodManager));
 
 app.get("/", (req, res) => {
     res.clearCookie("color-mode");
@@ -91,14 +93,6 @@ app.get("/", (req, res) => {
     }
 
     return res.type("html").send(schedule);
-});
-
-app.get("/admin", (req, res) => {
-    if (!req.isAdmin) {
-        return res.sendStatus(403);
-    }
-
-    return res.type("html").sendFile(path.join(__dirname, "..", "htmlsMin", "admin.min.html"));
 });
 
 app.post("/schedules", async (req, res) => {
@@ -156,16 +150,6 @@ app.post("/food", async (req, res) => {
     let foodData = await foodManager.getFood(weeks);
     return res.json({ weeks: foodData });
 });
-
-app.post("/clearCachedFoods", (req, res) => {
-    if (!req.isAdmin) {
-        return res.sendStatus(403);
-    }
-
-    foodManager.clearCachedFoods();
-    return res.json({ success: true });
-});
-
 
 
 if (useHTTPS) {

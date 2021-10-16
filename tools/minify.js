@@ -4,7 +4,7 @@ const path = require("path");
 
 const options = {};
 
-const htmlFiles = ["activate", "login", "schedule", "admin"];
+const htmlFiles = ["activate", "login", "schedule"];
 
 for (let htmlFile of htmlFiles) {
     minify(path.join(__dirname, "..", "htmls", htmlFile + ".html"), options).then(res => {

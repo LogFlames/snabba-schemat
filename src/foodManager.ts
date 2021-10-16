@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import puppeteer from 'puppeteer';
+import { AdminRequestResponseReturn, AdminRequestResponseStatus } from './admin';
 
 interface FoodWeek {
     html: string;
@@ -9,6 +10,10 @@ interface FoodWeek {
 }
 
 const foodFilePath: string = path.join(__dirname, "..", "cache", "food.json");
+const foodConfigFilePath: string = path.join(__dirname, "..", "private", "foodConfig.json");
+
+var foodLink: string = "";
+loadFoodLink();
 
 var foods: { [week: string]: FoodWeek } = {};
 if (fs.existsSync(foodFilePath)) {
@@ -55,7 +60,7 @@ async function scrapeFood(weeks: string[]) {
         }
     });
 
-    await page.goto('https://sodexo.mashie.com/public/app/S%C3%B6derk%C3%B6ket/e86ce755?country=se');
+    await page.goto(foodLink);
 
     await page.waitForSelector('#app-page > div.panel-group');
 
@@ -170,9 +175,22 @@ async function scrapeFood(weeks: string[]) {
     fs.writeFileSync(foodFilePath, JSON.stringify(foods));
 }
 
-export function clearCachedFoods() {
+export function clearCachedFoods(): AdminRequestResponseReturn {
     foods = {};
     if (fs.existsSync(foodFilePath)) {
         fs.rmSync(foodFilePath);
     }
+
+    return { status: AdminRequestResponseStatus.Success };
+}
+
+export function updateFoodLink(newFoodLink: string): AdminRequestResponseReturn {
+    foodLink = newFoodLink;
+    fs.writeFileSync(foodConfigFilePath, JSON.stringify({ foodLink: foodLink }, null, 2));
+
+    return { status: AdminRequestResponseStatus.Success, message: "Food link changed, you now probably want to clear the cached food." };
+}
+
+function loadFoodLink() {
+    foodLink = JSON.parse(fs.readFileSync(foodConfigFilePath).toString()).foodLink;
 }

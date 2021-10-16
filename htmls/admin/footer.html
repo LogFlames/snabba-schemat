@@ -1,0 +1,45 @@
+<div class="promotion">Gjord av: Elias Lundell</div>
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" />
+                <div class="slider round"></div>
+            </label>
+    <em>Enable Dark Mode</em>
+</div>
+</body>
+
+<script>
+    const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
+
+    function firstClickDetetor() {
+        toggleSwitch.addEventListener("click", doubleClick);
+        setTimeout(function() {
+            toggleSwitch.removeEventListener("click", doubleClick);
+        }, 500);
+    }
+
+    function doubleClick() {
+        toggleSwitch.checked = false;
+        currentTheme = "blue";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        renderScheduleWeek();
+    }
+
+    if (currentTheme === "dark") {
+        toggleSwitch.checked = true;
+    }
+
+    function switchTheme(e) {
+        if (e.target.checked) {
+            currentTheme = "dark";
+        } else {
+            currentTheme = currentTheme === "blue" ? "blue" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        localStorage.setItem("theme", currentTheme)
+        renderScheduleWeek();
+    }
+
+    toggleSwitch.addEventListener("change", switchTheme, false);
+    toggleSwitch.addEventListener("click", firstClickDetetor);
+</script>

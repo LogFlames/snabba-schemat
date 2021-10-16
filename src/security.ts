@@ -11,13 +11,15 @@ interface ActivationInformation {
     lastAuthentication: string;
     authenticationCount: number;
     shallForceLogout: boolean;
-    isAdmin: boolean;
 }
 
 interface ActivationCode {
     used: boolean;
     usedOn: string;
-    isAdmin?: boolean;
+}
+
+export interface UserPermission {
+    permissions: { [permissionName: string]: boolean };
 }
 
 export enum ActivateCodeStatus {
@@ -44,6 +46,9 @@ const loginHTMLPath = path.join(__dirname, "..", "htmlsMin", "login.min.html");
 const activeUUIDs: { [uuid: string]: ActivationInformation } = JSON.parse(fs.readFileSync(activeUUIDsPath).toString());
 const activationCodes: { [activationCode: string]: ActivationCode } = JSON.parse(fs.readFileSync(activationCodesPath).toString());
 
+const permissionsFilePath = path.join(__dirname, "..", "private", "permissions.json");
+const userPermissions: { [activationCode: string]: UserPermission } = JSON.parse(fs.readFileSync(permissionsFilePath).toString());
+
 const loginTemplate = fs.readFileSync(loginHTMLPath).toString().replace("-----PUBLIC KEY-----", PUBLIC_KEY);
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
@@ -52,10 +57,16 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
             activeUUIDs[req.signedCookies.uuid].lastAuthentication = new Date().toUTCString();
             activeUUIDs[req.signedCookies.uuid].authenticationCount++;
             fs.writeFileSync(activeUUIDsPath, JSON.stringify(activeUUIDs, null, 2));
-            if (activeUUIDs[req.signedCookies.uuid].isAdmin === undefined) {
-                activeUUIDs[req.signedCookies.uuid].isAdmin = false;
+
+            let activationKey: string = activeUUIDs[req.signedCookies.uuid].activationKey;
+            if (activationKey in userPermissions) {
+                req.userPermission = userPermissions[activationKey];
+            } else {
+                req.userPermission = {
+                    permissions: {}
+                };
             }
-            req.isAdmin = activeUUIDs[req.signedCookies.uuid].isAdmin;
+
             return next();
         } else {
             res.clearCookie("uuid");
@@ -97,8 +108,6 @@ export function activateCode(code: string): ActivateCodeReturn {
         activationCodes[code].used = true;
         activationCodes[code].usedOn = now;
 
-        let admin: boolean = activationCodes[code].isAdmin || false;
-
         let uuid = "";
         if (uuid === "" || uuid in activeUUIDs) {
             uuid = generateRandomString(256);
@@ -108,8 +117,7 @@ export function activateCode(code: string): ActivateCodeReturn {
             activationKey: code,
             lastAuthentication: now,
             authenticationCount: 0,
-            shallForceLogout: false,
-            isAdmin: admin
+            shallForceLogout: false
         }
 
         fs.writeFileSync(activationCodesPath, JSON.stringify(activationCodes, null, 2));

@@ -26,6 +26,20 @@ cat > activeUUIDs.json << EOF
 EOF
 fi
 
+if [ ! -e permissions.json ]; then
+cat > permissions.json << EOF
+{}
+EOF
+fi
+
+if [ ! -e foodConfig.json ]; then
+cat > foodConfig.json << EOF
+{
+	"foodLink": "https://sodexo.mashie.com/public/app/S%C3%B6derk%C3%B6ket/e86ce755?country=se"
+}
+EOF
+fi
+
 if [ ! -e secret.json ]; then
 cat > secret.json << EOF
 {
@@ -41,7 +55,7 @@ fi
 
 cd ..
 
-echo "Generate certification files from https://www.sslforfree.com/ or use the commands below"
+echo "Generate certification files from https://www.sslforfree.com/ or use the commented commands below (in the 'setup_private.sh' file)"
 
 # cd cert
 # if [ ! -e key.pem ] || [ ! -e cert.pem ]; then
