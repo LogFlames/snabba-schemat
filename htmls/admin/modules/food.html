@@ -2,6 +2,9 @@
     <h2>Food</h2>
     <button id="clear_cached_foods">Clear cached food</button>
     <br>
+    <div class="space30"></div>
+    <button id="show_current_food_link">Show Current Food Link</button>
+    <h3><a href="https://sodexo.mashie.com/public/app?country=se" target="_blank" rel="noopener norefferer">Search For Norra Real</a></h3>
     <input id="new_food_link" style="width: 70%;" placeholder="https://sodexo.mashie.com/public/app?country=se">
     <button id="update_food_link">Update Food Link</button>
 </div>
@@ -10,6 +13,7 @@
 <script>
     document.getElementById("clear_cached_foods").addEventListener("click", clearCachedFoods);
     document.getElementById("update_food_link").addEventListener("click", updateFoodLink);
+    document.getElementById("show_current_food_link").addEventListener("click", showCurrentFoodLink);
 
     function clearCachedFoods() {
         let postClearCachedFoodsOptions = {
@@ -32,12 +36,12 @@
                 }
             })
             .then(response => {
+                console.log(response);
                 alert("Clear Cached Foods:\n" + response.status + ("message" in response ? "\n" + response.message : ""));
             });
     }
 
     function updateFoodLink() {
-
         let newFoodLink = document.getElementById("new_food_link").value;
         if (newFoodLink === "") {
             alert("You need to enter the new link first...");
@@ -66,7 +70,33 @@
                 }
             })
             .then(response => {
+                console.log(response);
                 alert("Update Food Link:\n" + response.status + ("message" in response ? "\n" + response.message : ""));
+            });
+    }
+
+    function showCurrentFoodLink() {
+        let getCurrentFoodLink = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            }
+        };
+
+        fetch("/admin/currentFoodLink", getCurrentFoodLink)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return {
+                        status: "Unsuccessful request"
+                    };
+                }
+            })
+            .then(response => {
+                console.log(response);
+                alert("Current Food Link:\n" + ("foodLink" in response ? response.foodLink : response.status));
             });
     }
 </script>

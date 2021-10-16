@@ -83,5 +83,13 @@ export function adminRouter(foodManager: typeof import("./foodManager")): expres
         return res.type("json").send(JSON.stringify(operationReturn));
     });
 
+    router.get("/currentFoodLink", (req, res) => {
+        if (!(req.userPermission && "food" in req.userPermission.permissions && req.userPermission.permissions.food)) {
+            return res.sendStatus(403);
+        }
+
+        res.type("json").send(JSON.stringify({ foodLink: foodManager.getFoodLink() }));
+    })
+
     return router;
 }

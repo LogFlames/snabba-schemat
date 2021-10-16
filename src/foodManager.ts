@@ -191,6 +191,10 @@ export function updateFoodLink(newFoodLink: string): AdminRequestResponseReturn 
     return { status: AdminRequestResponseStatus.Success, message: "Food link changed, you now probably want to clear the cached food." };
 }
 
+export function getFoodLink(): string {
+    return foodLink;
+}
+
 function loadFoodLink() {
     foodLink = JSON.parse(fs.readFileSync(foodConfigFilePath).toString()).foodLink;
 }
