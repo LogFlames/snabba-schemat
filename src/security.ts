@@ -4,6 +4,7 @@ import crypto from "crypto";
 const jsencrypt = require("node-jsencrypt");
 
 import { NextFunction, Request, Response } from "express";
+import { AdminRequestResponseReturn, AdminRequestResponseStatus } from './admin';
 
 interface ActivationInformation {
     activationTime: string;
@@ -16,10 +17,13 @@ interface ActivationInformation {
 interface ActivationCode {
     used: boolean;
     usedOn: string;
+    createdBy: string;
+    createdAt: string;
 }
 
 export interface UserPermission {
     permissions: { [permissionName: string]: boolean };
+    userCode: string;
 }
 
 export enum ActivateCodeStatus {
@@ -48,6 +52,9 @@ const activationCodes: { [activationCode: string]: ActivationCode } = JSON.parse
 
 const permissionsFilePath = path.join(__dirname, "..", "private", "permissions.json");
 const userPermissions: { [activationCode: string]: UserPermission } = JSON.parse(fs.readFileSync(permissionsFilePath).toString());
+for (let code in userPermissions) {
+    userPermissions[code].userCode = code;
+}
 
 const loginTemplate = fs.readFileSync(loginHTMLPath).toString().replace("-----PUBLIC KEY-----", PUBLIC_KEY);
 
@@ -63,7 +70,8 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
                 req.userPermission = userPermissions[activationKey];
             } else {
                 req.userPermission = {
-                    permissions: {}
+                    permissions: {},
+                    userCode: activationKey
                 };
             }
 
@@ -144,3 +152,18 @@ export function decryptRSA(message: string) {
 function generateRandomString(length: number) {
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 };
+
+export function enableNewActivationCode(newActivationCode: string, creator: string): AdminRequestResponseReturn {
+    if (!newActivationCode.match(/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/)) {
+        return { status: AdminRequestResponseStatus.Unsuccessful, message: "Invalid format of code. Use format AAAA-AAAA-AAAA-AAAA" };
+    }
+
+    if (newActivationCode in activationCodes) {
+        return { status: AdminRequestResponseStatus.Unsuccessful, message: "The requested new code already exists." };
+    }
+
+    activationCodes[newActivationCode] = { used: false, usedOn: "", createdBy: creator, createdAt: new Date().toUTCString() };
+    fs.writeFileSync(activationCodesPath, JSON.stringify(activationCodes, null, 2));
+
+    return { status: AdminRequestResponseStatus.Success, message: `Code ${newActivationCode} created.` };
+}

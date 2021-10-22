@@ -22,14 +22,14 @@ const adminFooterHTML = fs.readFileSync(adminFooterFilePath).toString();
 const adminMissingImplementationFilePath = path.join(__dirname, "..", "htmls", "admin", "missingImplementation.html");
 const adminMissingImplementationHTML = fs.readFileSync(adminMissingImplementationFilePath).toString();
 
-const modules: string[] = ["food"];
+const modules: string[] = ["food", "activationCodes"];
 
 var modulesHTML: { [moduleName: string]: string } = {};
 for (let moduleName of modules) {
     modulesHTML[moduleName] = fs.readFileSync(path.join(__dirname, "..", "htmls", "admin", "modules", moduleName + ".html")).toString();
 }
 
-export function adminRouter(foodManager: typeof import("./foodManager")): express.Router {
+export function adminRouter(foodManager: typeof import("./foodManager"), security: typeof import("./security")): express.Router {
     let router = express.Router();
 
     router.get("/", (req, res) => {
@@ -89,7 +89,20 @@ export function adminRouter(foodManager: typeof import("./foodManager")): expres
         }
 
         res.type("json").send(JSON.stringify({ foodLink: foodManager.getFoodLink() }));
-    })
+    });
+
+    router.post("/enableNewActivationCode", (req, res) => {
+        if (!(req.userPermission && "activationCodes" in req.userPermission.permissions && req.userPermission.permissions.food)) {
+            return res.sendStatus(403);
+        }
+
+        if (!("newActivationCode" in req.body)) {
+            return res.sendStatus(400);
+        }
+
+        let operationReturn: AdminRequestResponseReturn = security.enableNewActivationCode(req.body.newActivationCode, req.userPermission.userCode);
+        res.type("json").send(JSON.stringify(operationReturn));
+    });
 
     return router;
 }

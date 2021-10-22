@@ -14,7 +14,9 @@ cat > activationCodes.json << EOF
 {
 	"AAAA-AAAA-AAAA-AAAA": {
 		"used": false,
-		"usedOn": null
+		"usedOn": "",
+		"createdBy": "SETUP-SCRIPT",
+		"createdAt": "Time of setup"
 	}
 }
 EOF
