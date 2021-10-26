@@ -5,6 +5,7 @@ import puppeteer, { CustomError } from "puppeteer";
 import LZString from "lz-string";
 
 import * as dateHelpers from "./dateHelpers";
+import { AdminRequestResponseReturn, AdminRequestResponseStatus } from './admin';
 
 interface CompressedSchedule {
     compressedHTML: string;
@@ -62,7 +63,9 @@ export interface ScrapeScheduleReturn {
 const schedules: { [name: string]: UserSchedule } = {};
 const scrapePromises: { [name: string]: Promise<ScrapeScheduleReturn> } = {};
 
-for (let user of fs.readdirSync(path.join(__dirname, "..", "cache", "users"))) {
+const scheduleCacheFolder = path.join(__dirname, "..", "cache", "users");
+
+for (let user of fs.readdirSync(scheduleCacheFolder)) {
     let userScheduleFile: UserScheduleFile = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "cache", "users", user)).toString());
     let userSchedule: UserSchedule = { password: userScheduleFile.password, salt: userScheduleFile.salt, weeks: JSON.parse(userScheduleFile.weeks) };
     schedules[user.replace(".json", "")] = userSchedule;
@@ -390,3 +393,31 @@ function sha512salt(message: string, salt: string) {
 function generateRandomString(length: number) {
     return crypto.randomBytes(Math.ceil(length / 2)).toString("hex").slice(0, length);
 };
+
+export function getUserList(): AdminRequestResponseReturn {
+    return { status: AdminRequestResponseStatus.Success, message: JSON.stringify(Object.keys(schedules)) };
+}
+
+export function clearAllUserCache(): AdminRequestResponseReturn {
+    for (let user in schedules) {
+        delete schedules[user];
+        if (fs.existsSync(path.join(scheduleCacheFolder, user + ".json"))) {
+            fs.rmSync(path.join(scheduleCacheFolder, user + ".json"));
+        }
+    }
+
+    return { status: AdminRequestResponseStatus.Success, message: "Cleared all caches." };
+}
+
+export function clearOneUserCache(user: string): AdminRequestResponseReturn {
+    if (!(user in schedules)) {
+        return { status: AdminRequestResponseStatus.Unsuccessful, message: `Found no user: ${user}` };
+    }
+
+    delete schedules[user];
+    if (fs.existsSync(path.join(scheduleCacheFolder, user + ".json"))) {
+        fs.rmSync(path.join(scheduleCacheFolder, user + ".json"));
+    }
+
+    return { status: AdminRequestResponseStatus.Success, message: `Cleared cache of user: ${user}` };
+}

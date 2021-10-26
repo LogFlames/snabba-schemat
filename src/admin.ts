@@ -22,14 +22,14 @@ const adminFooterHTML = fs.readFileSync(adminFooterFilePath).toString();
 const adminMissingImplementationFilePath = path.join(__dirname, "..", "htmls", "admin", "missingImplementation.html");
 const adminMissingImplementationHTML = fs.readFileSync(adminMissingImplementationFilePath).toString();
 
-const modules: string[] = ["food", "activationCodes"];
+const modules: string[] = ["food", "activationCodes", "userCache"];
 
 var modulesHTML: { [moduleName: string]: string } = {};
 for (let moduleName of modules) {
     modulesHTML[moduleName] = fs.readFileSync(path.join(__dirname, "..", "htmls", "admin", "modules", moduleName + ".html")).toString();
 }
 
-export function adminRouter(foodManager: typeof import("./foodManager"), security: typeof import("./security")): express.Router {
+export function adminRouter(scheduleManager: typeof import("./scheduleManager"), foodManager: typeof import("./foodManager"), security: typeof import("./security")): express.Router {
     let router = express.Router();
 
     router.get("/", (req, res) => {
@@ -62,7 +62,7 @@ export function adminRouter(foodManager: typeof import("./foodManager"), securit
     });
 
     router.post("/clearCachedFoods", (req, res) => {
-        if (!(req.userPermission && "food" in req.userPermission.permissions && req.userPermission.permissions.food)) {
+        if (!hasPermission(req, "food")) {
             return res.sendStatus(403);
         }
 
@@ -71,7 +71,7 @@ export function adminRouter(foodManager: typeof import("./foodManager"), securit
     });
 
     router.post("/updateFoodLink", (req, res) => {
-        if (!(req.userPermission && "food" in req.userPermission.permissions && req.userPermission.permissions.food)) {
+        if (!hasPermission(req, "food")) {
             return res.sendStatus(403);
         }
 
@@ -84,7 +84,7 @@ export function adminRouter(foodManager: typeof import("./foodManager"), securit
     });
 
     router.get("/currentFoodLink", (req, res) => {
-        if (!(req.userPermission && "food" in req.userPermission.permissions && req.userPermission.permissions.food)) {
+        if (!hasPermission(req, "food")) {
             return res.sendStatus(403);
         }
 
@@ -92,7 +92,7 @@ export function adminRouter(foodManager: typeof import("./foodManager"), securit
     });
 
     router.post("/enableNewActivationCode", (req, res) => {
-        if (!(req.userPermission && "activationCodes" in req.userPermission.permissions && req.userPermission.permissions.food)) {
+        if (!hasPermission(req, "activationCodes") || !req.userPermission) {
             return res.sendStatus(403);
         }
 
@@ -104,5 +104,38 @@ export function adminRouter(foodManager: typeof import("./foodManager"), securit
         res.type("json").send(JSON.stringify(operationReturn));
     });
 
+    router.get("/userList", (req, res) => {
+        if (!hasPermission(req, "individualUsers")) {
+            return res.sendStatus(403);
+        }
+
+        res.type("json").send(JSON.stringify(scheduleManager.getUserList()));
+    });
+
+    router.post("/clearAllUserCache", (req, res) => {
+        if (!hasPermission(req, "userCache")) {
+            return res.sendStatus(403);
+        }
+
+        res.type("json").send(JSON.stringify(scheduleManager.clearAllUserCache()));
+    });
+
+    router.post("/clearOneUserCache", (req, res) => {
+        if (!hasPermission(req, "userCache") || !hasPermission(req, "individualUsers")) {
+            return res.sendStatus(403);
+        }
+
+        if (!("user" in req.body)) {
+            return res.sendStatus(400);
+        }
+
+        let operationReturn: AdminRequestResponseReturn = scheduleManager.clearOneUserCache(req.body.user);
+        res.type("json").send(JSON.stringify(operationReturn));
+    });
+
     return router;
+}
+
+function hasPermission(req: express.Request, permissionName: string): boolean {
+    return req.userPermission !== undefined && permissionName in req.userPermission.permissions && req.userPermission.permissions[permissionName];
 }

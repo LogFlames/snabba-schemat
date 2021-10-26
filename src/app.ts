@@ -60,7 +60,7 @@ app.post("/activate", (req, res) => {
 
 app.use(security.authenticate);
 app.use(security.login);
-app.use("/admin", admin.adminRouter(foodManager, security));
+app.use("/admin", admin.adminRouter(scheduleManager, foodManager, security));
 
 app.get("/", (req, res) => {
     res.clearCookie("color-mode");

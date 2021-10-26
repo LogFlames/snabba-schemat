@@ -1,0 +1,111 @@
+<div class="center holder">
+    <h2>User Cache</h2>
+    <button id="clear_all_user_cache" class="scale">Clear All User Cache</button>
+    <br>
+    <div id="individualUserControl">
+        <div class="space30"></div>
+        <label for="user">Select a user: </label>
+        <select name="user" id="user">
+            <option value="none">Select User</option>
+        </select>
+        <br>
+        <button id="clear_cache_for_user" class="scale" disabled>Clear Cache For User</button>
+    </div>
+</div>
+<div class="space30"></div>
+
+<script>
+    let user_select = document.getElementById("user");
+    user_select.addEventListener("change", () => {
+        document.getElementById("clear_cache_for_user").disabled = user_select.value == "none";
+    });
+
+    document.getElementById("clear_all_user_cache").addEventListener("click", clearAllUserCache);
+    document.getElementById("clear_cache_for_user").addEventListener("click", clearOneUserCache);
+
+    function testUserListDefined() {
+        if (userList === undefined) {
+            setTimeout(testUserListDefined, 200);
+            return;
+        }
+
+        if (userList === null) {
+            document.getElementById("individualUserControl").remove();
+        } else {
+            for (let i = 1; i < user_select.childElementCount; i++) {
+                user_select.removeChild(user_select.children[i]);
+            }
+
+            user_select.value = "none";
+
+            for (let user of userList) {
+                let userOption = document.createElement("option");
+                userOption.value = user;
+                userOption.innerText = user;
+                user_select.appendChild(userOption);
+            }
+        }
+    }
+
+    testUserListDefined();
+
+    function clearAllUserCache() {
+        let postClearAllUserCache = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        }
+
+        fetch("/admin/clearAllUserCache", postClearAllUserCache)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return {
+                        status: "Unsuccessful request"
+                    };
+                }
+            })
+            .then(response => {
+                console.log(response);
+                alert("Clear All User Cache:\n" + response.status + "\n" + ("message" in response ? response.message : ""));
+
+                updateUserList();
+                testUserListDefined();
+            });
+    }
+
+    function clearOneUserCache(user) {
+        let postClearOneUserCache = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                user: user_select.value
+            })
+        }
+
+        fetch("/admin/clearOneUserCache", postClearOneUserCache)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return {
+                        status: "Unsuccessful request"
+                    };
+                }
+            })
+            .then(response => {
+                console.log(response);
+                alert("Clear One User Cache:\n" + response.status + "\n" + ("message" in response ? response.message : ""));
+
+                updateUserList();
+                testUserListDefined();
+            });
+    }
+</script>
