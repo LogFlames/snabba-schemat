@@ -1,0 +1,44 @@
+<div class="center holder" id="individualUsersDiv">
+    <h2>Individual Users</h2>
+    <br>
+    <label for="user">Select a user: </label>
+    <select name="user" id="user_individual_select">
+        <option value="none">Select User</option>
+    </select>
+</div>
+<div class="space30"></div>
+
+<script>
+    let user_select_individual = document.getElementById("user_individual_select");
+    user_select_individual.addEventListener("change", () => {
+        for (let otherSelect of document.querySelectorAll("select[name='user']")) {
+            otherSelect.value = user_select_individual.value;
+        }
+    });
+
+    function testUserListDefined() {
+        if (userList === undefined) {
+            setTimeout(testUserListDefined, 200);
+            return;
+        }
+
+        if (userList === null) {
+            document.getElementById("individualUsersDiv").remove();
+        } else {
+            for (let i = 1; i < user_select_individual.childElementCount; i++) {
+                user_select_individual.removeChild(user_select_individual.children[i]);
+            }
+
+            user_select_individual.value = "none";
+
+            for (let user of userList) {
+                let userOption = document.createElement("option");
+                userOption.value = user;
+                userOption.innerText = user;
+                user_select_individual.appendChild(userOption);
+            }
+        }
+    }
+
+    testUserListDefined();
+</script>

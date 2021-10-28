@@ -22,7 +22,7 @@ const adminFooterHTML = fs.readFileSync(adminFooterFilePath).toString();
 const adminMissingImplementationFilePath = path.join(__dirname, "..", "htmls", "admin", "missingImplementation.html");
 const adminMissingImplementationHTML = fs.readFileSync(adminMissingImplementationFilePath).toString();
 
-const modules: string[] = ["food", "activationCodes", "userCache"];
+const modules: string[] = ["food", "activationCodes", "userCache", "individualUsers"];
 
 var modulesHTML: { [moduleName: string]: string } = {};
 for (let moduleName of modules) {

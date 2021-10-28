@@ -5,7 +5,7 @@
     <div id="individualUserControl">
         <div class="space30"></div>
         <label for="user">Select a user: </label>
-        <select name="user" id="user">
+        <select name="user" id="user_cache_select">
             <option value="none">Select User</option>
         </select>
         <br>
@@ -15,9 +15,12 @@
 <div class="space30"></div>
 
 <script>
-    let user_select = document.getElementById("user");
+    let user_select = document.getElementById("user_cache_select");
     user_select.addEventListener("change", () => {
         document.getElementById("clear_cache_for_user").disabled = user_select.value == "none";
+        for (let otherSelect of document.querySelectorAll("select[name='user']")) {
+            otherSelect.value = user_select.value;
+        }
     });
 
     document.getElementById("clear_all_user_cache").addEventListener("click", clearAllUserCache);
