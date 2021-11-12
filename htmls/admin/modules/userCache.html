@@ -19,7 +19,10 @@
     user_select.addEventListener("change", () => {
         document.getElementById("clear_cache_for_user").disabled = user_select.value == "none";
         for (let otherSelect of document.querySelectorAll("select[name='user']")) {
-            otherSelect.value = user_select.value;
+            if (otherSelect.value != user_select.value) {
+                otherSelect.value = user_select.value;
+                otherSelect.dispatchEvent(new Event('change'));
+            }
         }
     });
 
