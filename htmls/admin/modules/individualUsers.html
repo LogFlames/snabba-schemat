@@ -12,7 +12,10 @@
     let user_select_individual = document.getElementById("user_individual_select");
     user_select_individual.addEventListener("change", () => {
         for (let otherSelect of document.querySelectorAll("select[name='user']")) {
-            otherSelect.value = user_select_individual.value;
+            if (otherSelect.value != user_select_individual.value) {
+                otherSelect.value = user_select_individual.value;
+                otherSelect.dispatchEvent(new Event('change'));
+            }
         }
     });
 

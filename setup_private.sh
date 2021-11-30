@@ -57,7 +57,7 @@ fi
 
 cd ..
 
-echo "Generate certification files from https://www.sslforfree.com/ or use the commented commands below (in the 'setup_private.sh' file)"
+echo "See the readme for ssl key generation instructions"
 
 # cd cert
 # if [ ! -e key.pem ] || [ ! -e cert.pem ]; then
