@@ -14,7 +14,7 @@
 
 <body>
 
-    <div class="center">
+    <div class="center" id="title_bar_div">
         <h1 id="title_bar">Schema -
             <label>Vecka</label>
             <div id="week_buttons" class="week_buttons"></div>
@@ -146,7 +146,7 @@
         }
     }
 
-    var gestureZone = document.getElementById("title_bar");
+    var gestureZone = document.getElementById("title_bar_div");
     swiper.init(gestureZone, function(e) {
         switch (e.direction) {
             case "left":
