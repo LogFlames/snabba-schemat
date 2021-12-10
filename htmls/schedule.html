@@ -108,7 +108,6 @@
             3 + (week1.getDay() + 6) % 7) / 7);
     }
 
-    /*
     var swiper = {
         touchStartX: 0,
         touchEndX: 0,
@@ -151,14 +150,13 @@
     swiper.init(gestureZone, function(e) {
         switch (e.direction) {
             case "left":
-                moveWeeksRight();
+                moveWeeksLeft();
                 break;
             case "right":
-                moveWeeksLeft();
+                moveWeeksRight();
                 break;
         }
     });
-    */
 
     const FUTURE_WEEKS = 3;
 
