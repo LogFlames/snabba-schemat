@@ -187,7 +187,7 @@
 
         let scheduleHolder = document.getElementById("schedule_holder");
 
-        if (scheduleWeeks[week] === "") {
+        if (scheduleWeeks[week] === "" || scheduleWeeks[week].html === undefined) {
             scheduleHolder.innerHTML = "Laddar in denna vecka...";
         } else {
             if (currentTheme === "light" || currentTheme === "blue") {
