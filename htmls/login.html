@@ -109,6 +109,8 @@
 
         window.location.reload(true);
     };
+    
+    setInterval(detailsChanged, 750);
 
     document.getElementById("name").oninput = detailsChanged;
     document.getElementById("password").oninput = detailsChanged;
