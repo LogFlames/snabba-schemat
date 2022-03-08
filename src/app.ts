@@ -19,7 +19,7 @@ const HOST = address.ip();
 const HTTP_PORT = 8080;
 const HTTPS_PORT = 8081;
 
-const useHTTPS: boolean = false;
+const useHTTPS: boolean = true;
 
 const FUTURE_WEEKS = 3;
 
@@ -64,7 +64,6 @@ app.use(security.login);
 app.use("/admin", admin.adminRouter(scheduleManager, foodManager, security));
 
 app.get("/", (req, res) => {
-    res.clearCookie("color-mode");
     let week: string = dateHelper.getWeek(new Date()).toString();
     if ("week" in req.cookies) {
         week = req.cookies.week;

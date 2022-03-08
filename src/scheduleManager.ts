@@ -142,7 +142,7 @@ export async function getSchedules(name: string, password: string, weeks: string
     for (let w of cachedWeeks) {
         let cachedWeek = getCachedSchedule(name, password, w);
         if (cachedWeek.status === CachedScheduleStatus.Success && cachedWeek.schedule) {
-            returnWeeks[w] = { html: cachedWeek.schedule?.html, updated: cachedWeek.schedule?.updated };
+            returnWeeks[w] = { html: cachedWeek.schedule.html, updated: cachedWeek.schedule.updated };
         }
     }
 
