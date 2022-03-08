@@ -24,6 +24,7 @@ const useHTTPS: boolean = false;
 const FUTURE_WEEKS = 3;
 
 const scheduleTemplate = fs.readFileSync(path.join(__dirname, "..", "htmlsMin", "schedule.min.html").toString());
+const shareTemplate = fs.readFileSync(path.join(__dirname, "..", "htmlsMin", "share.min.html").toString());
 
 const app = express();
 app.use(expressRateLimit({ windowMs: 1000, max: 9 }));
@@ -95,6 +96,10 @@ app.get("/", (req, res) => {
     return res.type("html").send(schedule);
 });
 
+app.get("/share", (req, res) => {
+    return res.type("html").send(shareTemplate.slice().toString());
+});
+
 app.post("/schedules", async (req, res) => {
     if (!("week" in req.cookies)) {
         return res.sendStatus(400);
@@ -111,25 +116,31 @@ app.post("/schedules", async (req, res) => {
     }
 
     let password = security.decryptRSA(req.cookies.password);
-    let schedules = await scheduleManager.getSchedules(req.cookies.name, password, weeks, req.cookies.week);
+    let schedules = await scheduleManager.getSchedules(req.cookies.name, password, weeks, req.cookies.week, false);
 
     if (schedules.status === scheduleManager.UpdatedScheduleStatus.WrongLogin) {
         res.clearCookie("name");
         res.clearCookie("password");
         return res.json({ message: "Fel inloggningsuppgifter. Du har blivit utloggad, ladda om sidan för att skriva i nya." });
-    } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.ServiceWindow) {
+    } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.ServiceWindow || schedules.status === scheduleManager.UpdatedScheduleStatus.OnlyCached) {
         if (schedules.weeks) {
-            let returnWeeks: { [week: string]: string } = {};
+            let returnWeeks: { [week: string]: scheduleManager.Schedule } = {};
             for (let w of schedules.missingWeeks) {
                 if (w in schedules.weeks) {
-                    returnWeeks[w] = schedules.weeks[w].html;
+                    returnWeeks[w] = schedules.weeks[w];
                 } else {
-                    returnWeeks[w] = "Schemat har ett service-fönster, kan bara visa tidigare sparade scheman. När service-fönstret är över kommer nya scheman hämtas.";
+                    if (schedules.status === scheduleManager.UpdatedScheduleStatus.ServiceWindow) {
+                        returnWeeks[w] = { html: "Schemat har ett service-fönster, kan bara visa tidigare sparade scheman. När service-fönstret är över kommer nya scheman hämtas.", updated: "" };
+                    } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.OnlyCached) {
+                        returnWeeks[w] = { html: "Snabbaschemat har endast hämtat cachade scheman.", updated: "" };
+                    }
                 }
             }
             return res.json({ weeks: returnWeeks });
-        } else {
+        } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.ServiceWindow) {
             return res.json({ message: "Schemat har ett service-fönster, kan bara visa tidigare sparade scheman. När service-fönstret är över kommer nya scheman hämtas." });
+        } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.OnlyCached) {
+            return res.json({ message: "Snabbaschemat har endast hämtat cachade scheman." });
         }
     } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.Success) {
         if (schedules.weeks) {

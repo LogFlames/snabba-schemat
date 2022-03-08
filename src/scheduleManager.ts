@@ -46,7 +46,8 @@ export enum UpdatedScheduleStatus {
     ServiceWindow,
     UnknownFail,
     Success,
-    NoRequest
+    NoRequest,
+    OnlyCached
 }
 
 export interface UpdatedScheduleReturn {
@@ -98,7 +99,7 @@ export function getCachedSchedule(name: string, password: string, week: string):
     }
 }
 
-export async function getSchedules(name: string, password: string, weeks: string[], week: string): Promise<UpdatedScheduleReturn> {
+export async function getSchedules(name: string, password: string, weeks: string[], week: string, useOnlyCached: boolean): Promise<UpdatedScheduleReturn> {
     let weeksToScrape: string[] = [];
     let cachedWeeks: string[] = [];
 
@@ -123,10 +124,9 @@ export async function getSchedules(name: string, password: string, weeks: string
         }
     }
 
-    if (!(name in scrapePromises)) {
+    if (!(name in scrapePromises) && !useOnlyCached) {
         scrapePromises[name] = scrapeWeeksAttempts(name, password, weeksToScrape);
     }
-
 
     let missingWeeks: string[] = weeks;
     if (!weeksToScrape.includes(week)) {
@@ -146,25 +146,29 @@ export async function getSchedules(name: string, password: string, weeks: string
         }
     }
 
-    let scrapedWeeks = await scrapePromises[name];
-    delete scrapePromises[name];
+    if (!useOnlyCached) {
+        let scrapedWeeks = await scrapePromises[name];
+        delete scrapePromises[name];
 
-    if (scrapedWeeks.status === UpdatedScheduleStatus.ServiceWindow) {
-        returnStatus = UpdatedScheduleStatus.ServiceWindow;
-    } else if (scrapedWeeks.status === UpdatedScheduleStatus.WrongLogin) {
-        returnStatus = UpdatedScheduleStatus.WrongLogin;
-    } else if (scrapedWeeks.status === UpdatedScheduleStatus.Success && scrapedWeeks.weeks) {
-        for (let w in scrapedWeeks.weeks) {
-            let html = LZString.decompressFromBase64(scrapedWeeks.weeks[w].compressedHTML);
-            if (html) {
-                returnWeeks[w] = { html: html, updated: scrapedWeeks.weeks[w].updated };
-            } else {
-                returnStatus = UpdatedScheduleStatus.UnknownFail;
-                break;
+        if (scrapedWeeks.status === UpdatedScheduleStatus.ServiceWindow) {
+            returnStatus = UpdatedScheduleStatus.ServiceWindow;
+        } else if (scrapedWeeks.status === UpdatedScheduleStatus.WrongLogin) {
+            returnStatus = UpdatedScheduleStatus.WrongLogin;
+        } else if (scrapedWeeks.status === UpdatedScheduleStatus.Success && scrapedWeeks.weeks) {
+            for (let w in scrapedWeeks.weeks) {
+                let html = LZString.decompressFromBase64(scrapedWeeks.weeks[w].compressedHTML);
+                if (html) {
+                    returnWeeks[w] = { html: html, updated: scrapedWeeks.weeks[w].updated };
+                } else {
+                    returnStatus = UpdatedScheduleStatus.UnknownFail;
+                    break;
+                }
             }
+        } else if (scrapedWeeks.status === UpdatedScheduleStatus.UnknownFail) {
+            returnStatus = UpdatedScheduleStatus.UnknownFail;
         }
-    } else if (scrapedWeeks.status === UpdatedScheduleStatus.UnknownFail) {
-        returnStatus = UpdatedScheduleStatus.UnknownFail;
+    } else {
+        returnStatus = UpdatedScheduleStatus.OnlyCached;
     }
 
     return { status: returnStatus, missingWeeks: missingWeeks, weeks: returnWeeks };
@@ -178,10 +182,11 @@ async function scrapeWeeksAttempts(name: string, password: string, weeks: string
     }
     let done = true;
     for (let attempt: number = 0; attempt < 3; attempt++) {
-        let newSchedules: ScrapeScheduleReturn = await scrapeSchedules(name, password, weeks).catch((err): ScrapeScheduleReturn => {
-            console.error(err);
-            return { status: UpdatedScheduleStatus.UnknownFail };
-        });
+        let newSchedules: ScrapeScheduleReturn = await scrapeSchedules(name, password, weeks).catch(
+            (err): ScrapeScheduleReturn => {
+                console.error(err);
+                return { status: UpdatedScheduleStatus.UnknownFail };
+            });
 
         switch (newSchedules.status) {
             case UpdatedScheduleStatus.ServiceWindow:
@@ -229,162 +234,173 @@ async function scrapeWeeksAttempts(name: string, password: string, weeks: string
 }
 
 async function scrapeSchedules(name: string, password: string, weeks: string[]): Promise<ScrapeScheduleReturn> {
-    let browser = await puppeteer.launch();
-    let page = await browser.newPage();
+    let browser: puppeteer.Browser | null = null;
+    let scrapeReturn: ScrapeScheduleReturn | null = null;
 
-    await page.setRequestInterception(true);
-    page.on('request', (req) => {
-        if (req.resourceType() == "image" || req.resourceType() == "stylesheet" || req.resourceType() == "font") {
-            req.abort();
-        } else {
-            req.continue();
-        }
-    });
+    try {
+        browser = await puppeteer.launch({ headless: false });
+        let page = await browser.newPage();
 
-    await page.goto("https://fnsservicesso1.stockholm.se/sso-ng/saml-2.0/authenticate?customer=https://login001.stockholm.se&targetsystem=TimetableViewer");
+        await page.setRequestInterception(true);
+        page.on('request', (req) => {
+            if (req.resourceType() == "image" || req.resourceType() == "stylesheet" || req.resourceType() == "font") {
+                req.abort();
+            } else {
+                req.continue();
+            }
+        });
 
-    await page.setJavaScriptEnabled(false);
+        await page.goto("https://fnsservicesso1.stockholm.se/sso-ng/saml-2.0/authenticate?customer=https://login001.stockholm.se&targetsystem=TimetableViewer");
 
-    await page.waitForSelector("a.btn:nth-child(1)");
-    await page.click("a.btn:nth-child(1)");
+        await page.setJavaScriptEnabled(false);
 
-    await page.waitForSelector(".beta");
-    await page.click(".beta");
+        await page.waitForSelector("a.btn:nth-child(1)");
+        await page.click("a.btn:nth-child(1)");
 
-    await page.waitForSelector("#user");
-    await page.type("#user", name);
+        await page.waitForSelector(".beta");
+        await page.click(".beta");
 
-    await page.waitForSelector("#password");
-    await page.type("#password", password);
+        await page.waitForSelector("#user");
+        await page.type("#user", name);
 
-    await page.setJavaScriptEnabled(true);
+        await page.waitForSelector("#password");
+        await page.type("#password", password);
 
-    await page.waitForSelector("button.btn:nth-child(1)");
-    await page.click("button.btn:nth-child(1)");
+        await page.setJavaScriptEnabled(true);
 
-    const logged_in_or_error = "\
+        await page.waitForSelector("button.btn");
+        await page.click("button.btn");
+
+        const logged_in_or_error = "\
     document.querySelector('div.w-panel-container:nth-child(3) > div:nth-child(1) > a:nth-child(1)') !== null || \
     (document.querySelector('body > h1') !== null && document.body.innerHTML.indexOf('Skolplattformen - servicefönster') >= 0) ||\
     document.querySelector('.beta') !== null || \
     window.location.href === 'https://start.stockholm/forskola-skola/'";
 
-    await page.waitForFunction(logged_in_or_error);
+        await page.waitForFunction(logged_in_or_error);
 
-    if (await page.evaluate(() => window.location.href === "https://start.stockholm/forskola-skola/")) {
-        await browser.close();
-        return { status: UpdatedScheduleStatus.UnknownFail };
-    }
-
-    if (await page.evaluate(() => document.body.innerHTML.indexOf("Skolplattformen - servicefönster") >= 0)) {
-        await browser.close();
-        return { status: UpdatedScheduleStatus.ServiceWindow };
-    }
-
-    if (await page.evaluate(() => document.querySelector(".beta") !== null)) {
-        await browser.close();
-
-        return { status: UpdatedScheduleStatus.WrongLogin };
-    }
-
-    await page.goto("https://fns.stockholm.se/ng/portal/start/timetable/timetable-viewer/fns.stockholm.se/");
-
-    await page.waitForResponse("https://fns.stockholm.se/ng/api/render/timetable");
-    await page.waitForSelector("#timetableElement");
-
-    let scrapeReturn: ScrapeScheduleReturn = { status: UpdatedScheduleStatus.Success, weeks: {} };
-
-    for (let week of weeks) {
-
-
-        await page.waitForSelector("input");
-        let year = new Date().getFullYear();
-        let alreadyCorrect = await page.evaluate((week, year): boolean => {
-            let input = document.querySelector("input");
-            if (input) {
-                return input.value === `v.${week}, ${year}`;
-            }
-            return false;
-        }, week, year);
-
-        if (!alreadyCorrect) {
-            let oldSvg: string = await page.evaluate(() => {
-                let svg = document.querySelector("#timetableElement > svg");
-                return (svg ? svg.innerHTML : "");
-            });
-
-            await delay(0.5);
-
-            await page.evaluate((weekText: string) => {
-                let inp = document.querySelector("input");
-                if (inp) {
-                    inp.value = "";
-                }
-            });
-            await page.focus("input");
-            await page.type("input", `v.${week}, ${year}`);
-            await page.focus("input");
-            await page.keyboard.press("Enter");
-
-            //await page.waitForResponse("https://fns.stockholm.se/ng/api/get/timetable/render/key");
-            //await page.waitForResponse("https://fns.stockholm.se/ng/api/render/timetable");
-
-            await page.waitForFunction((oldSvg: string) => {
-                let svg = document.querySelector("#timetableElement > svg");
-                return svg && svg.innerHTML !== oldSvg;
-            }, {}, oldSvg);
+        if (await page.evaluate(() => window.location.href === "https://start.stockholm/forskola-skola/")) {
+            await browser.close();
+            return { status: UpdatedScheduleStatus.UnknownFail };
         }
 
-        var html = await page.evaluate((): string => {
-            let schedule = document.querySelector("#timetableElement");
-            if (!schedule || !schedule.parentNode) {
-                return "Hittade inte schemat";
-            }
-            let scheduleParent = schedule.parentNode;
-            let image = scheduleParent.querySelector("img");
-            if (image) {
-                let imageParent = image.parentNode;
-                if (imageParent) {
-                    imageParent.removeChild(image);
-                }
-            }
-
-            let svg = scheduleParent.querySelector("svg");
-
-            if (!svg) {
-                return "Hittade inte schema-bilden";
-            }
-            svg.setAttribute("width", "100%");
-            svg.removeAttribute("height");
-            (<HTMLElement>scheduleParent.querySelector(".w-timetable")).style.width = "100%";
-            (<HTMLElement>scheduleParent.querySelector(".w-timetable")).style.height = "auto";
-
-            let svgHTML = (<Element>scheduleParent).innerHTML;
-            svgHTML = svgHTML
-                .replace(/focusable="true"/g, "")
-                .replace(/box-type="[a-zA-Z]*"/g, "")
-                .replace(/tabindex="0"/g, "")
-                .replace(/cursor: pointer;/g, "")
-                .replace(/box-id="[0-9]*"/g, "")
-                .replace(/shape-rendering="crispEdges"/g, "")
-                .replace(/\s\s+/g, " ")
-                .replace(/, /g, ",")
-                .replace(/: /g, ":")
-                .replace(/; /g, ";");
-
-            return svgHTML;
-        });
-
-        if (!scrapeReturn.weeks) {
-            scrapeReturn.weeks = {};
+        if (await page.evaluate(() => document.body.innerHTML.indexOf("Skolplattformen - servicefönster") >= 0)) {
+            await browser.close();
+            return { status: UpdatedScheduleStatus.ServiceWindow };
         }
 
-        scrapeReturn.weeks[week] = { compressedHTML: LZString.compressToBase64(html), updated: new Date().toUTCString() };
+        if (await page.evaluate(() => document.querySelector(".beta") !== null)) {
+            await browser.close();
+
+            return { status: UpdatedScheduleStatus.WrongLogin };
+        }
+
+        await page.goto("https://fns.stockholm.se/ng/portal/start/timetable/timetable-viewer/fns.stockholm.se/");
+
+        await page.waitForResponse("https://fns.stockholm.se/ng/api/render/timetable");
+        await page.waitForSelector("#timetableElement");
+
+        scrapeReturn = { status: UpdatedScheduleStatus.Success, weeks: {} };
+
+        for (let week of weeks) {
+            await page.waitForSelector("input");
+            let year = new Date().getFullYear();
+            let alreadyCorrect = await page.evaluate((week, year): boolean => {
+                let input = document.querySelector("input");
+                if (input) {
+                    return input.value === `v.${week}, ${year}`;
+                }
+                return false;
+            }, week, year);
+
+            if (!alreadyCorrect) {
+                let oldSvg: string = await page.evaluate(() => {
+                    let svg = document.querySelector("#timetableElement > svg");
+                    return (svg ? svg.innerHTML : "");
+                });
+
+                await delay(0.5);
+
+                await page.evaluate((weekText: string) => {
+                    let inp = document.querySelector("input");
+                    if (inp) {
+                        inp.value = "";
+                    }
+                });
+                await page.focus("input");
+                await page.type("input", `v.${week}, ${year}`);
+                await page.focus("input");
+                await page.keyboard.press("Enter");
+
+                //await page.waitForResponse("https://fns.stockholm.se/ng/api/get/timetable/render/key");
+                //await page.waitForResponse("https://fns.stockholm.se/ng/api/render/timetable");
+
+                await page.waitForFunction((oldSvg: string) => {
+                    let svg = document.querySelector("#timetableElement > svg");
+                    return svg && svg.innerHTML !== oldSvg;
+                }, {}, oldSvg);
+            }
+
+            var html = await page.evaluate((): string => {
+                let schedule = document.querySelector("#timetableElement");
+                if (!schedule || !schedule.parentNode) {
+                    return "Hittade inte schemat";
+                }
+                let scheduleParent = schedule.parentNode;
+                let image = scheduleParent.querySelector("img");
+                if (image) {
+                    let imageParent = image.parentNode;
+                    if (imageParent) {
+                        imageParent.removeChild(image);
+                    }
+                }
+
+                let svg = scheduleParent.querySelector("svg");
+
+                if (!svg) {
+                    return "Hittade inte schema-bilden";
+                }
+                svg.setAttribute("width", "100%");
+                svg.removeAttribute("height");
+                (<HTMLElement>scheduleParent.querySelector(".w-timetable")).style.width = "100%";
+                (<HTMLElement>scheduleParent.querySelector(".w-timetable")).style.height = "auto";
+
+                let svgHTML = (<Element>scheduleParent).innerHTML;
+                svgHTML = svgHTML
+                    .replace(/focusable="true"/g, "")
+                    .replace(/box-type="[a-zA-Z]*"/g, "")
+                    .replace(/tabindex="0"/g, "")
+                    .replace(/cursor: pointer;/g, "")
+                    .replace(/box-id="[0-9]*"/g, "")
+                    .replace(/shape-rendering="crispEdges"/g, "")
+                    .replace(/\s\s+/g, " ")
+                    .replace(/, /g, ",")
+                    .replace(/: /g, ":")
+                    .replace(/; /g, ";");
+
+                return svgHTML;
+            });
+
+            if (!scrapeReturn.weeks) {
+                scrapeReturn.weeks = {};
+            }
+
+            scrapeReturn.weeks[week] = { compressedHTML: LZString.compressToBase64(html), updated: new Date().toUTCString() };
+        }
+    } catch (e) {
+        if (browser !== null) {
+            await browser.close();
+        }
+
+        throw e;
+    } finally {
+        if (browser !== null) {
+            await browser.close();
+        }
     }
 
-    await browser.close();
-    return scrapeReturn;
+    return scrapeReturn!;
 }
-
 
 function sha512salt(message: string, salt: string) {
     return crypto.createHmac("sha512", salt).update(message, "utf-8").digest("hex");

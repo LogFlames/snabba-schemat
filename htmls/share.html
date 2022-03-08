@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Snabba Schemat</title>
+    <link rel="stylesheet" type="text/css" href="style.min.css">
+    <link rel="icon" sizes="32x32" href="Snabba_Schemat_Logga_Grey_Shadow_No-Background-01_32x32.png" type="image/png">
+    <link rel="icon" sizes="192x192" href="Snabba_Schemat_Logga_Grey_Shadow_No-Background-01_192x192.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="150x150" href="Snabba_Schemat_Logga_Grey_Shadow_No-Background-01_150x150.png" type="image/png">
+    <script>
+        var currentTheme = localStorage.getItem("theme") ? localStorage.getItem("theme") : "dark";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+    </script>
+</head>
+
+<body>
+
+    <div class="center" id="title_bar_div">
+        <h1 id="title_bar">Schema -
+            <label>Vecka</label>
+            <div id="week_buttons" class="week_buttons"></div>
+        </h1>
+        <p class="under_title" id="arrow_tip"></p>
+    </div>
+
+
+    <div class="center holder">
+        <div id="schedule_holder" class="center">
+        </div>
+        <p id="schedule_message_holder" class="center">
+            <!--! MESSAGE -->
+        </p>
+    </div>
+
+    <h1 id="food_title" class="center">Mat</h1>
+    <div id="food_holder" class="center holder">Laddar matsedel...</div>
+    <p id="food_message_holder" class="center"></p>
+    <div class="space100"></div>
+
+
+    <div class="promotion">Gjord av: Elias Lundell</div>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+      </label>
+        <em>Enable Dark Mode</em>
+    </div>
+</body>
+
+<script>
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.platform);
+    if (isMobile) {
+        //document.getElementById("arrow_tip").innerText = "(Du kan svajpa på veckorna för att byta vecka)";
+    } else {
+        document.getElementById("arrow_tip").innerText = "(Du kan använda piltangenterna för att byta vecka)";
+    }
+    const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
+
+    function firstClickDetetor() {
+        toggleSwitch.addEventListener("click", doubleClick);
+        setTimeout(function() {
+            toggleSwitch.removeEventListener("click", doubleClick);
+        }, 500);
+    }
+
+    function doubleClick() {
+        toggleSwitch.checked = false;
+        currentTheme = "blue";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        renderScheduleWeek();
+    }
+
+    if (currentTheme === "dark") {
+        toggleSwitch.checked = true;
+    }
+
+    function switchTheme(e) {
+        if (e.target.checked) {
+            currentTheme = "dark";
+        } else {
+            currentTheme = currentTheme === "blue" ? "blue" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        localStorage.setItem("theme", currentTheme)
+        renderScheduleWeek();
+    }
+
+    toggleSwitch.addEventListener("change", switchTheme, false);
+    toggleSwitch.addEventListener("click", firstClickDetetor);
+
+    function updateWeekCookie() {
+        let exp_date = new Date();
+        exp_date.setTime(exp_date.getTime() + 31 * 24 * 3600 * 1000);
+
+        document.cookie = `week=${week}; expires=${exp_date.toUTCString()}`;
+    }
+
+    Date.prototype.getWeek = function() {
+        var date = new Date(this.getTime());
+        date.setHours(0, 0, 0, 0);
+        // Thursday in current week decides the year.
+        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+        // January 4 is always in week 1.
+        var week1 = new Date(date.getFullYear(), 0, 4);
+        // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+        return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 -
+            3 + (week1.getDay() + 6) % 7) / 7);
+    }
+
+    var swiper = {
+        touchStartX: 0,
+        touchEndX: 0,
+        minSwipePixels: 30,
+        detectionZone: undefined,
+        swiperCallback: function() {},
+
+        init: function(detectionZone, callback) {
+            swiper.swiperCallback = callback
+            detectionZone.addEventListener('touchstart', function(event) {
+                swiper.touchStartX = event.changedTouches[0].screenX;
+            }, false);
+            detectionZone.addEventListener('touchend', function(event) {
+                swiper.touchEndX = event.changedTouches[0].screenX;
+                swiper.handleSwipeGesture();
+            }, false);
+        },
+
+        handleSwipeGesture: function() {
+            var direction,
+                moved;
+            if (swiper.touchEndX <= swiper.touchStartX) {
+                moved = swiper.touchStartX - swiper.touchEndX;
+                direction = "left";
+            }
+            if (swiper.touchEndX >= swiper.touchStartX) {
+                moved = swiper.touchEndX - swiper.touchStartX;
+                direction = "right";
+            }
+            if (moved > swiper.minSwipePixels && direction !== "undefined") {
+                swiper.swiperCallback({
+                    direction: direction,
+                    movedPixels: moved
+                });
+            }
+        }
+    }
+
+    var gestureZone = document.getElementById("title_bar_div");
+    swiper.init(gestureZone, function(e) {
+        switch (e.direction) {
+            case "left":
+                moveWeeksLeft();
+                break;
+            case "right":
+                moveWeeksRight();
+                break;
+        }
+    });
+
+    const FUTURE_WEEKS = 3;
+
+    let currentWeek = new Date().getWeek();
+    let week = currentWeek;
+
+    if (!("week" in localStorage) || localStorage.week < currentWeek) {
+        localStorage.week = currentWeek;
+        updateWeekCookie();
+    } else {
+        week = localStorage.week;
+        updateWeekCookie();
+    }
+
+    var scheduleWeeks = {};
+    var foodWeeks = {};
+    for (let w = currentWeek; w <= currentWeek + FUTURE_WEEKS; w++) {
+        scheduleWeeks[w.toString()] = "";
+        foodWeeks[w.toString()] = "";
+    }
+    scheduleWeeks[week] = "--SCHEDULE--";
+
+    function renderScheduleWeek() {
+        if (!(week in scheduleWeeks)) {
+            console.error(`Kunde inte rendrera schema från vecka ${week}. Veckan är inte inom det giltiga intervallet.`);
+            return;
+        }
+
+        let scheduleHolder = document.getElementById("schedule_holder");
+
+        if (scheduleWeeks[week] === "" || scheduleWeeks[week].html === undefined) {
+            scheduleHolder.innerHTML = "Laddar in denna vecka...";
+        } else {
+            if (currentTheme === "light" || currentTheme === "blue") {
+                scheduleHolder.innerHTML = scheduleWeeks[week].html
+                    .replace(/fill: +rgb\(204, +204, +204\)/g, "fill:#DDDDDD");
+            } else {
+                scheduleHolder.innerHTML = scheduleWeeks[week].html
+                    .replace(/stroke="#000000"/g, "")
+                    .replace(/stroke: *rgb\(0, *0, *0\)/g, "")
+                    .replace(/fill: *rgb\(0, *0, *0\)/g, "")
+                    .replace(/fill: *rgb\(255, *255, *255\)/g, "")
+                    .replace(/fill: *rgb\(204, *204, *204\)/g, "fill:#303136")
+                    .replace(/fill: *rgb\(0, *128, *255\)/g, "fill:#32577c")
+                    .replace(/fill: *rgb\(128, *255, *128\)/g, "fill:#3b7a3b")
+                    .replace(/fill: *rgb\(112, *235, *115\)/g, "fill:#138713")
+                    .replace(/fill: *rgb\(255, *255, *128\)/g, "fill:#464646")
+                    .replace(/fill: *rgb\(255, *0, *0\)/g, "fill:#6e1919")
+                    .replace(/fill: *rgb\(255, *53, *255\)/g, "fill:#852b85")
+                    .replace(/fill: *rgb\(174, *94, *255\)/g, "fill:#612b8a")
+                    .replace(/fill: *rgb\(159, *255, *255\)/g, "fill:#1e7474")
+                    .replace(/fill: *rgb\(255, *164, *255\)/g, "fill:#7e597e")
+                    .replace(/fill: *rgb\(255, *190, *125\)/g, "fill:#8b4f3d")
+                    .replace(/fill: *rgb\(96, *244, *23\)/g, "fill:#29690C")
+                    .replace(/fill: *rgb\(255, *174, *215\)/g, "fill:#70304F")
+                    .replace(/fill: *rgb\(150, *222, *41\)/g, "fill:#3E5E11")
+                    .replace(/fill: *rgb\(128, *128, *0\)/g, "fill:#646E40")
+                    .replace(/fill: *rgb\(235, *148, *228\)/g, "fill:#67466B")
+                    .replace(/fill: *rgb\(255, *187, *255\)/g, "fill:#603563")
+                    .replace(/fill: *rgb\(128, *255, *255\)/g, "fill:#325C57")
+                    .replace(/fill: *rgb\(255, *128, *192\)/g, "fill:#4D1B34")
+                    .replace(/fill: *rgb\(245, *199, *10\)/g, "fill:#0A3258")
+                    .replace(/fill: *rgb\(0, *128, *0\)/g, "fill:#084108")
+                    .replace(/fill: *rgb\(255, *172, *132\)/g, "fill:#803829")
+                    .replace(/fill: *rgb\(255, *255, *0\)/g, "");
+            }
+        }
+    }
+
+    function renderFoodWeek() {
+        if (!(week in scheduleWeeks)) {
+            console.error(`Kunde inte rendrera matsedeln från vecka ${week}. Veckan är inte inom det giltiga intervallet.`);
+            return;
+        }
+
+        let foodHolder = document.getElementById("food_holder");
+
+        if (!(week in foodWeeks) || foodWeeks[week] === "") {
+            foodHolder.innerHTML = "Laddar matsedeln...";
+        } else {
+            foodHolder.innerHTML = foodWeeks[week].html;
+
+            let today = new Date();
+            let todayElement = document.getElementById(`day_${("0" + today.getDate()).slice(-2)}`);
+            if (todayElement) {
+                todayElement.classList.toggle("current_day");
+            };
+        }
+    }
+
+    function renderWeek() {
+        for (let w = currentWeek; w <= currentWeek + FUTURE_WEEKS; w++) {
+            let button = document.getElementById(`week_button_${w}`);
+            if (w.toString() === week.toString()) {
+                button.className = "selected";
+            } else {
+                button.className = "not_selected";
+            }
+        }
+
+        renderScheduleWeek();
+        renderFoodWeek();
+    }
+
+    renderScheduleWeek();
+
+    function moveWeeksLeft() {
+        week--;
+        if (week < currentWeek) {
+            week = currentWeek + FUTURE_WEEKS;
+        }
+        localStorage.week = week;
+        updateWeekCookie();
+        renderWeek();
+    }
+
+    function moveWeeksRight() {
+        week++;
+        if (week > currentWeek + FUTURE_WEEKS) {
+            week = currentWeek;
+        }
+        localStorage.week = week;
+        updateWeekCookie();
+        renderWeek();
+    }
+
+    document.onkeydown = (event) => {
+        switch (event.keyCode) {
+            case 37: // left
+                moveWeeksLeft();
+                break;
+            case 39: // right
+                moveWeeksRight();
+                break;
+            default:
+                break;
+        }
+    };
+
+    let weekButtons = document.getElementById("week_buttons");
+
+    for (let w = currentWeek; w <= currentWeek + FUTURE_WEEKS; w++) {
+        let weekButton = document.createElement("button");
+        weekButton.id = `week_button_${w}`;
+        weekButton.innerText = w.toString();
+
+        if (w.toString() === week.toString()) {
+            weekButton.className = "selected";
+        } else {
+            weekButton.className = "not_selected";
+        }
+
+        weekButton.onclick = () => {
+            if (week !== w.toString()) {
+                week = w;
+                localStorage.week = w;
+                updateWeekCookie();
+                renderWeek();
+            }
+        };
+
+        weekButtons.appendChild(weekButton);
+    }
+
+
+    const postScheduleOptions = {
+        method: "POST",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+    }
+
+    fetch("/schedules", postScheduleOptions)
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return {
+                    message: `Kunde inte hämta scheman. ${response.status.toString()} ${response.statusText}`
+                };
+            }
+        })
+        .then(response => {
+            if (response.message) {
+                document.getElementById("schedule_message_holder").innerText = response.message;
+            } else {
+                document.getElementById("schedule_message_holder").innerText = "";
+            }
+            if (response.weeks) {
+                scheduleWeeks = response.weeks;
+                for (let week in scheduleWeeks) {
+                    scheduleWeeks[week].html = scheduleWeeks[week].html
+                        //.replace(/(?<=(Lesson|TimetableDay).*?)stroke-width: 1/g, "stroke-width: 0") // Way too heavy, takes a few seconds!!!
+                }
+                if (week in response.weeks) {
+                    renderScheduleWeek();
+                }
+            }
+        });
+
+    const postFoodOptions = {
+        method: "POST",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+    }
+
+    fetch("/food", postFoodOptions)
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return {
+                    message: `Kunde inte hämta matsedeln. ${response.status.toString()} ${response.statusText}`
+                };
+            }
+        })
+        .then(response => {
+            if (response.weeks) {
+                foodWeeks = response.weeks;
+                if (week in response.weeks) {
+                    renderFoodWeek();
+                }
+            }
+
+            if (response.message) {
+                document.getElementById("food_message_holder").innerText = response.message;
+            } else {
+                document.getElementById("food_message_holder").innerText = "";
+            }
+        });
+</script>
