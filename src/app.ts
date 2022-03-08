@@ -19,7 +19,8 @@ const HOST = address.ip();
 const HTTP_PORT = 8080;
 const HTTPS_PORT = 8081;
 
-const useHTTPS: boolean = true;
+const USE_HTTPS: boolean = true;
+const USE_ONLY_CACHE: boolean = false;
 
 const FUTURE_WEEKS = 3;
 
@@ -115,7 +116,7 @@ app.post("/schedules", async (req, res) => {
     }
 
     let password = security.decryptRSA(req.cookies.password);
-    let schedules = await scheduleManager.getSchedules(req.cookies.name, password, weeks, req.cookies.week, false);
+    let schedules = await scheduleManager.getSchedules(req.cookies.name, password, weeks, req.cookies.week, USE_ONLY_CACHE);
 
     if (schedules.status === scheduleManager.UpdatedScheduleStatus.WrongLogin) {
         res.clearCookie("name");
@@ -162,7 +163,7 @@ app.post("/food", async (req, res) => {
 });
 
 
-if (useHTTPS) {
+if (USE_HTTPS) {
     const httpRedirect = express();
     httpRedirect.all("*", (req, res) => {
         res.redirect(302, 'https://' + req.headers.host + req.url);

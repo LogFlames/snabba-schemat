@@ -77,6 +77,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 
             return next();
         } else {
+            console.log(`${new Date().toUTCString()}: User authenitacted with invalid UUID. Clearing cookies and sending activation page. This should not happen unless an UUID has been manually removed.`);
             res.clearCookie("uuid");
             res.clearCookie("name");
             res.clearCookie("password");
