@@ -238,7 +238,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
     let scrapeReturn: ScrapeScheduleReturn | null = null;
 
     try {
-        browser = await puppeteer.launch({ headless: false });
+        browser = await puppeteer.launch({ headless: true });
         let page = await browser.newPage();
 
         await page.setRequestInterception(true);
