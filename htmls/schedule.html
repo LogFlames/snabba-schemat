@@ -348,7 +348,10 @@
                 document.getElementById("schedule_message_holder").innerText = "";
             }
             if (response.weeks) {
-                scheduleWeeks = response.weeks;
+                for (let week in response.weeks) {
+                    scheduleWeeks[week] = response.weeks[week];
+                }
+
                 for (let week in scheduleWeeks) {
                     scheduleWeeks[week].html = scheduleWeeks[week].html
                         //.replace(/(?<=(Lesson|TimetableDay).*?)stroke-width: 1/g, "stroke-width: 0") // Way too heavy, takes a few seconds!!!

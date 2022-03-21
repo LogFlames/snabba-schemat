@@ -19,8 +19,8 @@ const HOST = address.ip();
 const HTTP_PORT = 8080;
 const HTTPS_PORT = 8081;
 
-const USE_HTTPS: boolean = true;
-const USE_ONLY_CACHE: boolean = false;
+const USE_HTTPS: boolean = false;
+const USE_ONLY_CACHE: boolean = true;
 
 const FUTURE_WEEKS = 3;
 
@@ -77,7 +77,7 @@ app.get("/", (req, res) => {
     if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.NoCache) {
         schedule = schedule.replace("<!--! MESSAGE -->", "Det fanns inget sparat schema, laddar in... (Detta kan ta en stund)");
     } else if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.OldLogin) {
-        schedule = schedule.replace("<!--! MESSAGE -->", "Fel inloggningsuppgifter till det sparade schemat. Detta kan hända efter ett lösenordsbyte, vänter på att ladda in med det nya lösenordet...");
+        schedule = schedule.replace("<!--! MESSAGE -->", "Fel inloggningsuppgifter till det sparade schemat. Detta kan hända efter ett lösenordsbyte, vänter på att ladda in ett nytt schema...");
     } else if (cachedSchedule.status === scheduleManager.CachedScheduleStatus.Success && cachedSchedule.schedule) {
         schedule = schedule.replace("\"--SCHEDULE--\"", JSON.stringify(cachedSchedule.schedule)); //.replace(/"/g, '\\"').replace(/'/g, "\\'"));
         if (cachedSchedule.schedule) {
@@ -140,7 +140,7 @@ app.post("/schedules", async (req, res) => {
         } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.ServiceWindow) {
             return res.json({ message: "Schemat har ett service-fönster, kan bara visa tidigare sparade scheman. När service-fönstret är över kommer nya scheman hämtas." });
         } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.OnlyCached) {
-            return res.json({ message: "Snabbaschemat har endast hämtat cachade scheman." });
+            return res.json({ message: "Snabbaschemat visar bara sedan tidigare hämtade scheman." });
         }
     } else if (schedules.status === scheduleManager.UpdatedScheduleStatus.Success) {
         if (schedules.weeks) {

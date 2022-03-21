@@ -115,7 +115,7 @@ export async function getSchedules(name: string, password: string, weeks: string
             }
 
             let updatedDate = new Date(schedules[name].weeks[w].updated);
-            if (!dateHelpers.isToday(updatedDate)) {
+            if (!dateHelpers.isToday(updatedDate) && !useOnlyCached) {
                 weeksToScrape.push(w);
                 continue;
             }
