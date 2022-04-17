@@ -45,7 +45,7 @@ fi
 if [ ! -e secret.json ]; then
 cat > secret.json << EOF
 {
-    "key": "123ABC"
+    "secret": "123ABC"
 }
 EOF
 fi
