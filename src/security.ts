@@ -75,6 +75,8 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
                 };
             }
 
+            res.cookie('uuid', req.signedCookies.uuid, { maxAge: 10 * 365 * 24 * 3600 * 1000, httpOnly: true, signed: true });
+
             return next();
         } else {
             console.log(`${new Date().toUTCString()}: User authenitacted with invalid UUID. Clearing cookies and sending activation page. This should not happen unless an UUID has been manually removed.`);
