@@ -275,7 +275,8 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
     document.querySelector('div.w-panel-container:nth-child(3) > div:nth-child(1) > a:nth-child(1)') !== null || \
     (document.querySelector('body > h1') !== null && document.body.innerHTML.indexOf('Skolplattformen - servicefönster') >= 0) ||\
     document.querySelector('.beta') !== null || \
-    window.location.href === 'https://start.stockholm/forskola-skola/'";
+    window.location.href === 'https://start.stockholm/forskola-skola/' || \
+    window.location.href.includes('login.jsp')";
 
         await page.waitForFunction(logged_in_or_error);
 
@@ -289,7 +290,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
             return { status: UpdatedScheduleStatus.ServiceWindow };
         }
 
-        if (await page.evaluate(() => document.querySelector(".beta") !== null)) {
+        if (await page.evaluate(() => window.location.href.includes("login.jsp"))) {
             await browser.close();
 
             return { status: UpdatedScheduleStatus.WrongLogin };
