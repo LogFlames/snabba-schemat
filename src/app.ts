@@ -38,6 +38,12 @@ app.use('/.well-known', express.static('.well-known'));
 app.use(cookieParser(security.secret));
 app.use(express.json());
 
+app.get("/clear-login", (req, res) => {
+    res.clearCookie("name");
+    res.clearCookie("password");
+    res.redirect("/");
+});
+
 
 app.post("/activate", (req, res) => {
     if (!('activationCode' in req.body)) {
@@ -166,7 +172,7 @@ app.post("/food", async (req, res) => {
 if (USE_HTTPS) {
     const httpRedirect = express();
     httpRedirect.all("*", (req, res) => {
-        res.redirect(302, 'https://' + req.headers.host + req.url);
+        res.redirect(301, 'https://' + req.headers.host + req.url);
     });
 
     httpRedirect.listen(HTTP_PORT, HOST, () => {
