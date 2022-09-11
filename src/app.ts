@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import expressRateLimit from 'express-rate-limit';
 import address from 'address';
+import cors from 'cors';
 
 import * as security from './security';
 import * as scheduleManager from './scheduleManager';
@@ -31,6 +32,7 @@ const icalExportTemplate = fs.readFileSync(path.join(__dirname, "..", "htmlsMin"
 
 const app = express();
 app.use(expressRateLimit({ windowMs: 1000, max: 9 }));
+app.use(cors())
 app.use(compression());
 
 app.use(express.static("public"));
