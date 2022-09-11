@@ -20,7 +20,7 @@ const HOST = address.ip();
 const HTTP_PORT = 8080;
 const HTTPS_PORT = 8081;
 
-const USE_HTTPS: boolean = false;
+const USE_HTTPS: boolean = true;
 const USE_ONLY_CACHE: boolean = false;
 
 const FUTURE_WEEKS = 3;
