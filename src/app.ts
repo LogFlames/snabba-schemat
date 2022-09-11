@@ -39,6 +39,26 @@ app.use(express.static("public"));
 app.use("/bin", express.static("bin"));
 app.use('/.well-known', express.static('.well-known'));
 
+app.get("/ce/*", (req, res) => {
+    let weeks = [];
+    let currentWeek = dateHelper.getWeek(new Date());
+    for (let w = currentWeek; w <= currentWeek + FUTURE_WEEKS; w++) {
+        weeks.push(w.toString());
+    }
+
+    let key = req.url.slice(4);
+    if (key.endsWith(".ics")) {
+        key = key.slice(0, -4);
+    }
+    let pathToICal: string = icalExport.getPathToICalFile(key, weeks);
+
+    if (pathToICal === "") {
+        return res.sendStatus(404);
+    }
+
+    return res.download(pathToICal, "snabbaschemat-calendar.ics");
+});
+
 app.use(cookieParser(security.secret));
 app.use(express.json());
 
@@ -68,7 +88,6 @@ app.post("/activate", (req, res) => {
         }));
     }
 });
-
 
 app.use(security.authenticate);
 app.use(security.login);
@@ -127,26 +146,6 @@ app.post("/export-end", (req, res) => {
     icalExport.disableExport(req.cookies.name);
     return res.sendStatus(200);
 });
-
-app.get("/ce/*", (req, res) => {
-    let weeks = [];
-    let currentWeek = dateHelper.getWeek(new Date());
-    for (let w = currentWeek; w <= currentWeek + FUTURE_WEEKS; w++) {
-        weeks.push(w.toString());
-    }
-
-    let key = req.url.slice(4);
-    if (key.endsWith(".ics")) {
-        key = key.slice(0, -4);
-    }
-    let pathToICal: string = icalExport.getPathToICalFile(key, weeks);
-
-    if (pathToICal === "") {
-        return res.sendStatus(404);
-    }
-
-    return res.download(pathToICal, "snabbaschemat-calendar.ics");
-})
 
 app.post("/schedules", async (req, res) => {
     if (!("week" in req.cookies)) {
