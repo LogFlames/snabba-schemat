@@ -45,26 +45,6 @@ PRODID:-//snabbaschemat.live//Schedules
 X-WR-CALNAME:Snabba Schemat Calendar Title
 NAME:Snabba Schemat Calendar Title
 CALSCALE:GREGORIAN
-BEGIN:VTIMEZONE
-TZID:Europe/Stockholm
-LAST-MODIFIED:20201011T015911Z
-TZURL:http://tzurl.org/zoneinfo-outlook/Europe/Stockholm
-X-LIC-LOCATION:Europe/Stockholm
-BEGIN:DAYLIGHT
-TZNAME:CEST
-TZOFFSETFROM:+0100
-TZOFFSETTO:+0200
-DTSTART:19700329T020000
-RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
-END:DAYLIGHT
-BEGIN:STANDARD
-TZNAME:CET
-TZOFFSETFROM:+0200
-TZOFFSETTO:+0100
-DTSTART:19701025T030000
-RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
-END:STANDARD
-END:VTIMEZONE
 `;
 
     for (let week in lessonInfo.weeks) {
@@ -80,11 +60,6 @@ DTEND;TZID=Europe/Stockholm:${date.toISOString().replace(/[:\.-]/g, "").slice(0,
 SUMMARY:${lesson.texts[0]}
 DESCRIPTION:${lesson.texts[0]} ${lesson.texts[1] === undefined || lesson.texts[1] === "" ? "" : "-"} ${lesson.texts[1]}
 LOCATION:${lesson.texts[2]}
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:${lesson.texts[0]}
-TRIGGER:-PT5M
-END:VALARM
 END:VEVENT
 `;
         }
