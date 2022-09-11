@@ -134,6 +134,9 @@ app.get("/ce/*", (req, res) => {
     }
 
     let key = req.url.slice(4);
+    if (key.endsWith(".ics")) {
+        key = key.slice(0, -4);
+    }
     let pathToICal: string = icalExport.getPathToICalFile(key, weeks);
 
     if (pathToICal === "") {
