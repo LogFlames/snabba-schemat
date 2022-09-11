@@ -7,6 +7,8 @@ import { generateRandomString } from "./security";
 var mapping: { [name: string]: string } = {};
 var reverseMapping: { [key: string]: string } = {};
 
+const fileWeeks: { [filePath: string]: string[] } = {};
+
 if (fs.existsSync(path.join(__dirname, "..", "cache", "export-mapping.json"))) {
     let map = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "cache", "export-mapping.json")).toString());
     mapping = map.mapping;
@@ -90,12 +92,17 @@ END:VEVENT
 
     ical += "END:VCALENDAR\n";
 
-    let pathToFile: string = path.join(__dirname, "..", "temp", "export-ics", key + ".ics");
     if (!fs.existsSync(path.join(__dirname, "..", "temp", "export-ics"))) {
         fs.mkdirSync(path.join(__dirname, "..", "temp", "export-ics"), { recursive: true });
     }
 
+    let pathToFile: string = path.join(__dirname, "..", "temp", "export-ics", key + ".ics");
+    if (fs.existsSync(pathToFile) && fs.readFileSync(pathToFile).toString() === ical) {
+        return pathToFile;
+    }
+
     fs.writeFileSync(pathToFile, ical);
+    fileWeeks[pathToFile] = weeks;
     return pathToFile;
 }
 
