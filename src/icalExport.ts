@@ -69,6 +69,9 @@ END:VEVENT
 
     ical += "END:VCALENDAR\n";
 
+    ical = ical.replace(/,/g, "\\,");
+    ical = ical.replace(/\n/g, "\r\n");
+
     if (!fs.existsSync(path.join(__dirname, "..", "temp", "export-ics"))) {
         fs.mkdirSync(path.join(__dirname, "..", "temp", "export-ics"), { recursive: true });
     }
