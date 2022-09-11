@@ -41,6 +41,8 @@ export function getPathToICalFile(key: string, weeks: string[]): string {
 
     let ical: string = `BEGIN:VCALENDAR
 VERSION:2.0
+METHOD:PUBLISH
+X-PUBLISHED-TTL:PT20M
 PRODID:-//snabbaschemat.live//Schedules
 X-WR-CALNAME:Snabba Schemat Calendar Title
 NAME:Snabba Schemat Calendar Title
