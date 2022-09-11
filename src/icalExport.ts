@@ -56,7 +56,7 @@ CALSCALE:GREGORIAN
 
             ical += `BEGIN:VEVENT
 DTSTAMP:${new Date().toISOString().replace(/[:\.-]/g, "").slice(0, 15)}
-UID:${lesson.guidId}@snabbaschemat.live
+UID:${lesson.guidId}--${date.toISOString().replace(/[:\.-]/g, "").slice(0, 8)}--${lesson.timeStart.replace(/:/g, "")}@snabbaschemat.live
 DTSTART;TZID=Europe/Stockholm:${date.toISOString().replace(/[:\.-]/g, "").slice(0, 8)}T${lesson.timeStart.replace(/:/g, "")}Z
 DTEND;TZID=Europe/Stockholm:${date.toISOString().replace(/[:\.-]/g, "").slice(0, 8)}T${lesson.timeEnd.replace(/:/g, "")}Z
 SUMMARY:${lesson.texts[0]}
