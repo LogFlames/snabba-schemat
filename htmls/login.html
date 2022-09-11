@@ -104,7 +104,7 @@
         let exp_date = new Date();
         exp_date.setTime(exp_date.getTime() + 4 * 365 * 24 * 3600 * 1000);
 
-        document.cookie = `name=${document.getElementById("name").value}; expires=${exp_date.toUTCString()}`;
+        document.cookie = `name=${document.getElementById("name").value.toLowerCase()}; expires=${exp_date.toUTCString()}`;
         document.cookie = `password=${encryptedPassword}; expires=${exp_date.toUTCString()}`;
 
         window.location.reload(true);
