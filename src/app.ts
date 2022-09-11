@@ -13,6 +13,7 @@ import * as scheduleManager from './scheduleManager';
 import * as foodManager from './foodManager';
 import * as dateHelper from './dateHelpers';
 import * as admin from './admin';
+import * as icalExport from './icalExport';
 
 
 const HOST = address.ip();
@@ -20,12 +21,13 @@ const HTTP_PORT = 8080;
 const HTTPS_PORT = 8081;
 
 const USE_HTTPS: boolean = false;
-const USE_ONLY_CACHE: boolean = true;
+const USE_ONLY_CACHE: boolean = false;
 
 const FUTURE_WEEKS = 3;
 
 const scheduleTemplate = fs.readFileSync(path.join(__dirname, "..", "htmlsMin", "schedule.min.html").toString());
 const shareTemplate = fs.readFileSync(path.join(__dirname, "..", "htmlsMin", "share.min.html").toString());
+const icalExportTemplate = fs.readFileSync(path.join(__dirname, "..", "htmlsMin", "icalExport.min.html").toString());
 
 const app = express();
 app.use(expressRateLimit({ windowMs: 1000, max: 9 }));
@@ -105,6 +107,41 @@ app.get("/", (req, res) => {
 app.get("/share", (req, res) => {
     return res.type("html").send(shareTemplate.slice().toString());
 });
+
+app.get("/export", (req, res) => {
+    return res.type("html").send(icalExportTemplate.slice().toString());
+})
+
+app.get("/export-key", (req, res) => {
+    return res.type("json").send({ key: icalExport.getKey(req.cookies.name) });
+})
+
+app.post("/export-start", (req, res) => {
+    icalExport.createNewExport(req.cookies.name);
+    return res.sendStatus(200);
+});
+
+app.post("/export-end", (req, res) => {
+    icalExport.disableExport(req.cookies.name);
+    return res.sendStatus(200);
+});
+
+app.get("/ce/*", (req, res) => {
+    let weeks = [];
+    let currentWeek = dateHelper.getWeek(new Date());
+    for (let w = currentWeek; w <= currentWeek + FUTURE_WEEKS; w++) {
+        weeks.push(w.toString());
+    }
+
+    let key = req.url.slice(4);
+    let pathToICal: string = icalExport.getPathToICalFile(key, weeks);
+
+    if (pathToICal === "") {
+        return res.sendStatus(404);
+    }
+
+    return res.download(pathToICal, "snabbaschemat-calendar.ics");
+})
 
 app.post("/schedules", async (req, res) => {
     if (!("week" in req.cookies)) {

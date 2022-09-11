@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Snabba Schemat</title>
+    <link rel="stylesheet" type="text/css" href="style.min.css">
+    <link rel="icon" sizes="32x32" href="Snabba_Schemat_Logga_Grey_Shadow_No-Background-01_32x32.png" type="image/png">
+    <link rel="icon" sizes="192x192" href="Snabba_Schemat_Logga_Grey_Shadow_No-Background-01_192x192.png" type="image/png">
+    <link rel="apple-touch-icon" sizes="150x150" href="Snabba_Schemat_Logga_Grey_Shadow_No-Background-01_150x150.png" type="image/png">
+    <script>
+        var currentTheme = localStorage.getItem("theme") ? localStorage.getItem("theme") : "dark";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+    </script>
+</head>
+
+<body>
+
+    <div class="center" id="title_bar_div">
+        <h1 id="title_bar">Exportera Schema</h1>
+    </div>
+
+    <div class="center holder">
+        <h2>Current export: </h2>
+        <span id="current-export-span"></span>
+        <div class="space40"></div>
+        <button id="start-export-button">Start exporting</button>
+        <button id="end-export-button">Stop exporting</button>
+    </div>
+
+    <div class="promotion">Gjord av: Elias Lundell</div>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+      </label>
+        <em>Enable Dark Mode</em>
+    </div>
+</body>
+
+<script>
+    const toggleSwitch = document.querySelector(".theme-switch input[type='checkbox']");
+
+    function firstClickDetetor() {
+        toggleSwitch.addEventListener("click", doubleClick);
+        setTimeout(function() {
+            toggleSwitch.removeEventListener("click", doubleClick);
+        }, 500);
+    }
+
+    function doubleClick() {
+        toggleSwitch.checked = false;
+        currentTheme = "blue";
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        renderScheduleWeek();
+    }
+
+    if (currentTheme === "dark") {
+        toggleSwitch.checked = true;
+    }
+
+    function switchTheme(e) {
+        if (e.target.checked) {
+            currentTheme = "dark";
+        } else {
+            currentTheme = currentTheme === "blue" ? "blue" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", currentTheme);
+        localStorage.setItem("theme", currentTheme)
+        renderScheduleWeek();
+    }
+
+    toggleSwitch.addEventListener("change", switchTheme, false);
+    toggleSwitch.addEventListener("click", firstClickDetetor);
+
+    function showCurrentExport() {
+        fetch("/export-key").then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return {
+                    key: ""
+                };
+            }
+        }).then(json => {
+            if (json.key === "") {
+                document.getElementById("current-export-span").innerText = "Not Currently Exporting";
+            } else {
+                document.getElementById("current-export-span").innerText = "https://snabbaschemat.live/ce/" + json.key;
+            }
+        });
+    }
+
+    showCurrentExport();
+
+    document.getElementById("start-export-button").onclick = () => {
+        const postStartExport = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        }
+
+        fetch("/export-start", postStartExport)
+            .then(response => {
+                if (response.ok) {
+                    showCurrentExport();
+                } else {
+                    console.error("Failed to start exporting schedule. Please contact Elias Lundell (elilun03@gmail.com)");
+                }
+            });
+    };
+
+    document.getElementById("end-export-button").onclick = () => {
+        const postStartExport = {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+        }
+
+        fetch("/export-end", postStartExport)
+            .then(response => {
+                if (response.ok) {
+                    showCurrentExport();
+                } else {
+                    console.error("Failed to stop exporting schedule. Please contact Elias Lundell (elilun03@gmail.com)");
+                }
+            });
+    };
+</script>

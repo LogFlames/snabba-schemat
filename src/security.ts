@@ -152,7 +152,7 @@ export function decryptRSA(message: string) {
     return decryptorRSA.decrypt(message);
 }
 
-function generateRandomString(length: number) {
+export function generateRandomString(length: number) {
     return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
 };
 

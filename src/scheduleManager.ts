@@ -12,10 +12,24 @@ interface CompressedSchedule {
     updated: string;
 }
 
+interface Lesson {
+    guidId: string;
+    texts: string[];
+    timeStart: string;
+    timeEnd: string;
+    dayOfWeekNumber: number;
+    blockName: string;
+}
+
+interface LessonInfo {
+    lessonInfo: Lesson[];
+    updated: string;
+}
+
 interface UserSchedule {
     password: string;
     salt: string;
-    weeks: { [week: string]: CompressedSchedule };
+    weeks: { [week: string]: [CompressedSchedule, LessonInfo] };
 }
 
 interface UserScheduleFile {
@@ -41,6 +55,11 @@ export interface CachedScheduleReturn {
     schedule?: Schedule;
 }
 
+export interface LessonInfoReturn {
+    status: CachedScheduleStatus;
+    weeks?: { [week: string]: LessonInfo };
+}
+
 export enum UpdatedScheduleStatus {
     WrongLogin,
     ServiceWindow,
@@ -58,7 +77,7 @@ export interface UpdatedScheduleReturn {
 
 export interface ScrapeScheduleReturn {
     status: UpdatedScheduleStatus;
-    weeks?: { [week: string]: CompressedSchedule };
+    weeks?: { [week: string]: [CompressedSchedule, LessonInfo] };
 }
 
 const schedules: { [name: string]: UserSchedule } = {};
@@ -70,6 +89,25 @@ for (let user of fs.readdirSync(scheduleCacheFolder)) {
     let userScheduleFile: UserScheduleFile = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "cache", "users", user)).toString());
     let userSchedule: UserSchedule = { password: userScheduleFile.password, salt: userScheduleFile.salt, weeks: JSON.parse(userScheduleFile.weeks) };
     schedules[user.replace(".json", "")] = userSchedule;
+}
+
+export function getLessonInfos(name: string, weeks: string[]): LessonInfoReturn {
+    if (!(name in schedules)) {
+        return { status: CachedScheduleStatus.NoCache };
+    }
+
+    let status: CachedScheduleStatus = CachedScheduleStatus.Success;
+    let returnWeeks: { [week: string]: LessonInfo } = {};
+
+    for (let week of weeks) {
+        if (!(week in schedules[name].weeks)) {
+            status = CachedScheduleStatus.NoCache;
+        } else {
+            returnWeeks[week] = { updated: schedules[name].weeks[week][1].updated, lessonInfo: schedules[name].weeks[week][1].lessonInfo };
+        }
+    }
+
+    return { status: status, weeks: returnWeeks };
 }
 
 export function getCachedSchedule(name: string, password: string, week: string): CachedScheduleReturn {
@@ -89,8 +127,8 @@ export function getCachedSchedule(name: string, password: string, week: string):
         return { status: CachedScheduleStatus.NoCache };
     }
 
-    let html = LZString.decompressFromBase64(schedules[name].weeks[week].compressedHTML);
-    let updated = schedules[name].weeks[week].updated;
+    let html = LZString.decompressFromBase64(schedules[name].weeks[week][0].compressedHTML);
+    let updated = schedules[name].weeks[week][0].updated;
 
     if (html) {
         return { status: CachedScheduleStatus.Success, schedule: { html: html, updated: updated } };
@@ -114,7 +152,7 @@ export async function getSchedules(name: string, password: string, weeks: string
                 continue;
             }
 
-            let updatedDate = new Date(schedules[name].weeks[w].updated);
+            let updatedDate = new Date(schedules[name].weeks[w][0].updated);
             if (!dateHelpers.isToday(updatedDate) && !useOnlyCached) {
                 weeksToScrape.push(w);
                 continue;
@@ -156,9 +194,9 @@ export async function getSchedules(name: string, password: string, weeks: string
             returnStatus = UpdatedScheduleStatus.WrongLogin;
         } else if (scrapedWeeks.status === UpdatedScheduleStatus.Success && scrapedWeeks.weeks) {
             for (let w in scrapedWeeks.weeks) {
-                let html = LZString.decompressFromBase64(scrapedWeeks.weeks[w].compressedHTML);
+                let html = LZString.decompressFromBase64(scrapedWeeks.weeks[w][0].compressedHTML);
                 if (html) {
-                    returnWeeks[w] = { html: html, updated: scrapedWeeks.weeks[w].updated };
+                    returnWeeks[w] = { html: html, updated: scrapedWeeks.weeks[w][0].updated };
                 } else {
                     returnStatus = UpdatedScheduleStatus.UnknownFail;
                     break;
@@ -212,7 +250,10 @@ async function scrapeWeeksAttempts(name: string, password: string, weeks: string
                 }
 
                 for (let w in newSchedules.weeks) {
-                    schedules[name].weeks[w] = { compressedHTML: newSchedules.weeks[w].compressedHTML, updated: newSchedules.weeks[w].updated };
+                    schedules[name].weeks[w] = [
+                        { compressedHTML: newSchedules.weeks[w][0].compressedHTML, updated: newSchedules.weeks[w][0].updated },
+                        { lessonInfo: newSchedules.weeks[w][1].lessonInfo, updated: newSchedules.weeks[w][1].updated }
+                    ];
                 }
 
                 let userScheduleFile: UserScheduleFile = { password: schedules[name].password, salt: schedules[name].salt, weeks: JSON.stringify(schedules[name].weeks) }
@@ -238,7 +279,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
     let scrapeReturn: ScrapeScheduleReturn | null = null;
 
     try {
-        browser = await puppeteer.launch({ headless: true });
+        browser = await puppeteer.launch({ headless: false });
         let page = await browser.newPage();
 
         await page.setRequestInterception(true);
@@ -248,7 +289,9 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
             } else {
                 req.continue();
             }
+
         });
+
 
         await page.goto("https://fnsservicesso1.stockholm.se/sso-ng/saml-2.0/authenticate?customer=https://login001.stockholm.se&targetsystem=TimetableViewer");
 
@@ -295,6 +338,15 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
 
             return { status: UpdatedScheduleStatus.WrongLogin };
         }
+
+        let lastLessonInfo: Lesson[] = [];
+        page.on('response', (res) => {
+            if (res.url().endsWith("/ng/api/render/timetable")) {
+                res.json().then(json => {
+                    lastLessonInfo = json.data.lessonInfo;
+                })
+            }
+        });
 
         await page.goto("https://fns.stockholm.se/ng/portal/start/timetable/timetable-viewer/fns.stockholm.se/");
 
@@ -386,7 +438,10 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
                 scrapeReturn.weeks = {};
             }
 
-            scrapeReturn.weeks[week] = { compressedHTML: LZString.compressToBase64(html), updated: new Date().toUTCString() };
+            scrapeReturn.weeks[week] = [
+                { compressedHTML: LZString.compressToBase64(html), updated: new Date().toUTCString() },
+                { lessonInfo: lastLessonInfo, updated: new Date().toUTCString() }
+            ];
         }
     } catch (e) {
         if (browser !== null) {
