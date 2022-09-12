@@ -15,6 +15,18 @@ if (fs.existsSync(path.join(__dirname, "..", "cache", "export-mapping.json"))) {
     reverseMapping = map.reverseMapping;
 }
 
+function foldLine(line: string) {
+    const parts = [];
+    let length = 75;
+    while (line.length > length) {
+        parts.push(line.slice(0, length));
+        line = line.slice(length);
+        length = 74;
+    }
+    parts.push(line);
+    return parts.join('\r\n\t');
+}
+
 function getDateOfISOWeek(w: number, y: number): Date {
     var simple = new Date(y, 0, 1 + (w - 1) * 7);
     var dow = simple.getDay();
@@ -70,7 +82,12 @@ END:VEVENT
     ical += "END:VCALENDAR\n";
 
     ical = ical.replace(/,/g, "\\,");
-    ical = ical.replace(/\n/g, "\r\n");
+
+    const parts: string[] = [];
+    for (let part of ical.split("\n")) {
+        parts.push(foldLine(part));
+    }
+    ical = parts.join("\r\n") + "\r\n";
 
     if (!fs.existsSync(path.join(__dirname, "..", "temp", "export-ics"))) {
         fs.mkdirSync(path.join(__dirname, "..", "temp", "export-ics"), { recursive: true });
