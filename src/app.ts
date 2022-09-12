@@ -56,7 +56,7 @@ app.get("/ce/*", (req, res) => {
         return res.sendStatus(404);
     }
 
-    return res.download(pathToICal, "snabbaschemat-calendar.ics", { headers: { "Content-Type": "text/calendar;" } });
+    return res.download(pathToICal, "snabbaschemat-calendar.ics", { headers: { "Content-Type": "text/calendar" } });
 });
 
 app.use(cookieParser(security.secret));
