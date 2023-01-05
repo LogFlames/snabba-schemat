@@ -279,7 +279,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
     let scrapeReturn: ScrapeScheduleReturn | null = null;
 
     try {
-        browser = await puppeteer.launch({ headless: true });
+        browser = await puppeteer.launch({ headless: false });
         let page = await browser.newPage();
 
         await page.setRequestInterception(true);
@@ -315,7 +315,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
         await page.click("button.btn");
 
         const logged_in_or_error = "\
-    document.querySelector('div.w-panel-container:nth-child(3) > div:nth-child(1) > a:nth-child(1)') !== null || \
+    window.location.href === 'https://fns.stockholm.se/ng/timetable/timetable-viewer/fns.stockholm.se/' || \
     (document.querySelector('body > h1') !== null && document.body.innerHTML.indexOf('Skolplattformen - servicefönster') >= 0) ||\
     document.querySelector('.beta') !== null || \
     window.location.href === 'https://start.stockholm/forskola-skola/' || \
