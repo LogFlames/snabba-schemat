@@ -62,6 +62,10 @@ CALSCALE:GREGORIAN
 `;
 
     for (let week in lessonInfo.weeks) {
+	if (lessonInfo.weeks[week].lessonInfo === null) {
+	    continue; 
+	}
+
         for (let lesson of lessonInfo.weeks[week].lessonInfo) {
             let date = getDateOfISOWeek(Number.parseInt(week), new Date().getFullYear());
             date.setDate(date.getDate() + lesson.dayOfWeekNumber);
