@@ -55,7 +55,7 @@ export function getPathToICalFile(key: string, weeks: string[]): string {
 VERSION:2.0
 METHOD:PUBLISH
 X-PUBLISHED-TTL:PT20M
-PRODID:-//snabbaschemat.live//Schedules
+PRODID:-//snabbaschemat.se//Schedules
 X-WR-CALNAME:Snabba Schemat Calendar Title
 NAME:Snabba Schemat Calendar Title
 CALSCALE:GREGORIAN
@@ -72,7 +72,7 @@ CALSCALE:GREGORIAN
 
             ical += `BEGIN:VEVENT
 DTSTAMP:${new Date().toISOString().replace(/[:\.-]/g, "").slice(0, 15)}
-UID:${lesson.guidId}--${date.toISOString().replace(/[:\.-]/g, "").slice(0, 8)}--${lesson.timeStart.replace(/:/g, "")}@snabbaschemat.live
+UID:${lesson.guidId}--${date.toISOString().replace(/[:\.-]/g, "").slice(0, 8)}--${lesson.timeStart.replace(/:/g, "")}@snabbaschemat.se
 DTSTART;TZID=Europe/Stockholm:${date.toISOString().replace(/[:\.-]/g, "").slice(0, 8)}T${lesson.timeStart.replace(/:/g, "")}Z
 DTEND;TZID=Europe/Stockholm:${date.toISOString().replace(/[:\.-]/g, "").slice(0, 8)}T${lesson.timeEnd.replace(/:/g, "")}Z
 SUMMARY:${lesson.texts[0]}
