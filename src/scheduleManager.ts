@@ -289,19 +289,18 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
             } else {
                 req.continue();
             }
-
         });
 
+        await page.goto("https://stockholm.skola24.se");
 
-        await page.goto("https://fnsservicesso1.stockholm.se/sso-ng/saml-2.0/authenticate?customer=https://login001.stockholm.se&targetsystem=TimetableViewer");
+        const been_redirected_to_login = "\
+        window.location.href.includes('amedborgare.jsp')";
 
-        await page.setJavaScriptEnabled(false);
+        await page.waitForFunction(been_redirected_to_login);
 
-        await page.waitForSelector("a.btn:nth-child(1)");
-        await page.click("a.btn:nth-child(1)");
+        await page.goto(page.url().replace("amedborgare.jsp", "loginForm.jsp"));
 
-        await page.waitForSelector(".beta");
-        await page.click(".beta");
+        // await page.setJavaScriptEnabled(false);
 
         await page.waitForSelector("#user");
         await page.type("#user", name);
@@ -309,7 +308,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
         await page.waitForSelector("#password");
         await page.type("#password", password);
 
-        await page.setJavaScriptEnabled(true);
+        // await page.setJavaScriptEnabled(true);
 
         await page.waitForSelector("button.btn");
         await page.click("button.btn");
@@ -319,7 +318,8 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
     (document.querySelector('body > h1') !== null && document.body.innerHTML.indexOf('Skolplattformen - servicefönster') >= 0) ||\
     document.querySelector('.beta') !== null || \
     window.location.href === 'https://start.stockholm/forskola-skola/' || \
-    window.location.href.includes('login.jsp')";
+    window.location.href === 'https://stockholm.skola24.se/ng/portal/start' || \
+    window.location.href.includes('amedborgare.jsp')";
 
         await page.waitForFunction(logged_in_or_error);
 
@@ -333,7 +333,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
             return { status: UpdatedScheduleStatus.ServiceWindow };
         }
 
-        if (await page.evaluate(() => window.location.href.includes("login.jsp"))) {
+        if (await page.evaluate(() => window.location.href.includes("amedborgare.jsp"))) {
             await browser.close();
 
             return { status: UpdatedScheduleStatus.WrongLogin };
@@ -348,9 +348,9 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
             }
         });
 
-        await page.goto("https://fns.stockholm.se/ng/portal/start/timetable/timetable-viewer/fns.stockholm.se/");
+        await page.goto("https://stockholm.skola24.se/ng/portal/start/timetable/timetable-viewer/stockholm.skola24.se/");
 
-        await page.waitForResponse("https://fns.stockholm.se/ng/api/render/timetable");
+        await page.waitForResponse("https://stockholm.skola24.se/ng/api/render/timetable");
         await page.waitForSelector("#timetableElement");
 
         scrapeReturn = { status: UpdatedScheduleStatus.Success, weeks: {} };
