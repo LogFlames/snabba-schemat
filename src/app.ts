@@ -17,7 +17,8 @@ import * as admin from './admin';
 import * as icalExport from './icalExport';
 
 
-const HOST = address.ip();
+//const HOST = address.ip();
+const HOST = "127.0.0.1";
 const HTTP_PORT = 8080;
 const HTTPS_PORT = 8081;
 
