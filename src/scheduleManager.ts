@@ -293,7 +293,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
         });
 
 
-        await page.goto("https://fnsservicesso1.stockholm.se/sso-ng/saml-2.0/authenticate?customer=https://login001.stockholm.se&targetsystem=TimetableViewer");
+        await page.goto("https://stockholm-sso.skola24.se/nssso/saml-2.0/authenticate?customer=https://login001.stockholm.se&targetsystem=TimetableViewer");
 
         await page.setJavaScriptEnabled(false);
 
@@ -315,7 +315,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
         await page.click("button.btn");
 
         const logged_in_or_error = "\
-    window.location.href === 'https://fns.stockholm.se/ng/timetable/timetable-viewer/fns.stockholm.se/' || \
+    window.location.href.startsWith('https://websthlm.skola24.se/timetable/timetable-viewer') || \
     (document.querySelector('body > h1') !== null && document.body.innerHTML.indexOf('Skolplattformen - servicefönster') >= 0) ||\
     document.querySelector('.beta') !== null || \
     window.location.href === 'https://start.stockholm/forskola-skola/' || \
@@ -348,23 +348,55 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
             }
         });
 
-        await page.goto("https://fns.stockholm.se/ng/portal/start/timetable/timetable-viewer/fns.stockholm.se/");
+        await page.goto("https://websthlm.skola24.se/timetable/timetable-viewer/stockholm.skola24.se/");
 
-        await page.waitForResponse("https://fns.stockholm.se/ng/api/render/timetable");
+        await page.waitForResponse("https://websthlm.skola24.se/api/render/timetable");
         await page.waitForSelector("#timetableElement");
 
         scrapeReturn = { status: UpdatedScheduleStatus.Success, weeks: {} };
 
         for (let week of weeks) {
-            await page.waitForSelector("input");
+            await page.waitForSelector("input:not([readonly])");
+
+            let weekOptions = await page.evaluate(() => {
+                let sel = document.querySelector("input:not([readonly]) ~ select");
+                if (sel) {
+                    let ops = [];
+                    for (let op of (sel as HTMLSelectElement).options) {
+                        if (op.textContent) {
+                            ops.push(op.textContent);
+                        }
+                    }
+                    return ops;
+                }
+            });
+
+            if (!weekOptions) {
+                console.error("Couldn't find weekOptions.");
+                return { status: UpdatedScheduleStatus.UnknownFail }
+            }
+
+            let selWeek = "";
+            for (let weekOp of weekOptions) {
+                if (weekOp.includes("v." + week.toString() + " ")) {
+                    selWeek = weekOp;
+                    break;
+                }
+            }
+
+            if (selWeek === "") {
+                console.error("Could not find week: " + week.toString());
+                return { status: UpdatedScheduleStatus.UnknownFail }
+            }
+
             let year = new Date().getFullYear();
-            let alreadyCorrect = await page.evaluate((week, year): boolean => {
-                let input = document.querySelector("input");
+            let alreadyCorrect = await page.evaluate((selWeek): boolean => {
+                let input = document.querySelector("input:not([readonly])");
                 if (input) {
-                    return input.value === `v.${week}, ${year}`;
+                    return (input as HTMLInputElement).value === selWeek;
                 }
                 return false;
-            }, week, year);
+            }, selWeek);
 
             if (!alreadyCorrect) {
                 let oldSvg: string = await page.evaluate(() => {
@@ -375,14 +407,15 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
                 await delay(0.5);
 
                 await page.evaluate((weekText: string) => {
-                    let inp = document.querySelector("input");
+                    let inp = document.querySelector("input:not([readonly])");
                     if (inp) {
-                        inp.value = "";
+                        (inp as HTMLInputElement).value = "";
                     }
                 });
-                await page.focus("input");
-                await page.type("input", `v.${week}, ${year}`);
-                await page.focus("input");
+
+                await page.focus("input:not([readonly])");
+                await page.type("input:not([readonly])", selWeek);
+                await page.focus("input:not([readonly])");
                 await page.keyboard.press("Enter");
 
                 //await page.waitForResponse("https://fns.stockholm.se/ng/api/get/timetable/render/key");
