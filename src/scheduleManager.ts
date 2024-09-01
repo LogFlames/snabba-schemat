@@ -342,7 +342,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
 
         let lastLessonInfo: Lesson[] = [];
         page.on('response', (res) => {
-            if (res.url().endsWith("/ng/api/render/timetable")) {
+            if (res.url().endsWith("/api/render/timetable")) {
                 res.json().then(json => {
                     lastLessonInfo = json.data.lessonInfo;
                 })
