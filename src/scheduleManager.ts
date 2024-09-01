@@ -352,7 +352,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
         await page.goto("https://websthlm.skola24.se/timetable/timetable-viewer/stockholm.skola24.se/");
 
         await page.waitForResponse("https://websthlm.skola24.se/api/render/timetable");
-        await page.waitForSelector("#timetableElement");
+        await page.waitForSelector("div.w-timetable");
 
         scrapeReturn = { status: UpdatedScheduleStatus.Success, weeks: {} };
 
@@ -401,7 +401,7 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
 
             if (!alreadyCorrect) {
                 let oldSvg: string = await page.evaluate(() => {
-                    let svg = document.querySelector("#timetableElement > svg");
+                    let svg = document.querySelector("div.w-timetable > svg");
                     return (svg ? svg.innerHTML : "");
                 });
 
@@ -423,13 +423,13 @@ async function scrapeSchedules(name: string, password: string, weeks: string[]):
                 //await page.waitForResponse("https://fns.stockholm.se/ng/api/render/timetable");
 
                 await page.waitForFunction((oldSvg: string) => {
-                    let svg = document.querySelector("#timetableElement > svg");
+                    let svg = document.querySelector("div.w-timetable > svg");
                     return svg && svg.innerHTML !== oldSvg;
                 }, {}, oldSvg);
             }
 
             var html = await page.evaluate((): string => {
-                let schedule = document.querySelector("#timetableElement");
+                let schedule = document.querySelector("div.w-timetable");
                 if (!schedule || !schedule.parentNode) {
                     return "Hittade inte schemat";
                 }
