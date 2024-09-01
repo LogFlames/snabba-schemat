@@ -1,11 +1,11 @@
-import fs from "fs";
-import path from "path";
 import crypto from "crypto";
-import puppeteer, { CustomError } from "puppeteer";
+import fs from "fs";
 import LZString from "lz-string";
+import path from "path";
+import puppeteer from "puppeteer";
 
-import * as dateHelpers from "./dateHelpers";
 import { AdminRequestResponseReturn, AdminRequestResponseStatus } from './admin';
+import * as dateHelpers from "./dateHelpers";
 
 interface CompressedSchedule {
     compressedHTML: string;
